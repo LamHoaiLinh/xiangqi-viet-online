@@ -3,9 +3,11 @@ services:
     name: xiangqi-viet-online
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev --legacy-peer-deps --no-audit --no-fund && npm run build
     startCommand: npm start
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: 20.18.1

@@ -72,3 +72,9 @@ Bản này có thêm chức năng backup thủ công để tránh mất kho ván
 6. **Nhập thay thế**: xoá kho hiện tại trên server rồi nạp lại từ file JSON. Chỉ dùng khi muốn khôi phục đúng theo file backup.
 
 File backup giữ cả Cờ Tướng, Cờ Úp, dấu sao ưu tiên, tên bàn, tên người chơi, kết quả, tỷ số sau ván và toàn bộ lịch sử nước đi.
+
+## Ghi chú deploy Render
+- Không commit `package-lock.json` được tạo trong môi trường nội bộ; Render cần tự cài từ npm public.
+- Node khuyến nghị: `20.18.1`.
+- Build Command: `npm install --include=dev --legacy-peer-deps --no-audit --no-fund && npm run build`.
+- Start Command: `npm start`.
