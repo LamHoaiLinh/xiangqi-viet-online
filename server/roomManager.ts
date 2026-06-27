@@ -1,5 +1,5 @@
 import { createInitialGameState, forceEnd, resetForNewGame } from '../shared/xiangqiRules.js';
-import { Color, opposite } from '../shared/gameTypes.js';
+import { Color, defaultDarkOptions, GameMode, opposite } from '../shared/gameTypes.js';
 import { createClock, materializeClock, startClock, stopClock } from './clockManager.js';
 import { PublicRoomSummary, Role, Room, RoomSettings, SeatChoice, Spectator, ThemeSettings, TimeControl } from './types.js';
 import { cleanDisplayName } from './moderation.js';
@@ -13,7 +13,7 @@ export const defaultTheme: ThemeSettings = {
 export const defaultTimeControl: TimeControl = { mode: 'increment', initialMs: 15 * 60_000, incrementMs: 5_000 };
 export const defaultSettings = (partial?: Partial<RoomSettings>): RoomSettings => ({
   allowSpectators: true, spectatorChatEnabled: true, spectatorReactionsEnabled: true, isPublic: true, locked: false, pauseOnDisconnect: false,
-  timeControl: defaultTimeControl, theme: defaultTheme, ...partial
+  timeControl: defaultTimeControl, theme: defaultTheme, gameMode: 'xiangqi', darkOptions: defaultDarkOptions, ...partial
 });
 
 function rid() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
@@ -27,16 +27,16 @@ export function publicSummaries(): PublicRoomSummary[] {
   return allRooms().filter(r => r.settings.isPublic && !r.settings.locked).map(r => ({
     id: r.id, name: r.name, isPublic: r.settings.isPublic, locked: r.settings.locked, hasPassword: !!r.password,
     allowSpectators: r.settings.allowSpectators, redName: r.red?.name, blackName: r.black?.name,
-    spectatorCount: r.spectators.filter(s => s.connected).length, status: r.game.status, timeControl: r.settings.timeControl
+    spectatorCount: r.spectators.filter(s => s.connected).length, status: r.game.status, timeControl: r.settings.timeControl, gameMode: r.settings.gameMode
   }));
 }
 
 export function createRoom(input: { name: string; playerId: string; displayName: string; side: SeatChoice; password?: string; settings: Partial<RoomSettings> }): Room {
   let id = rid(); while (rooms.has(id)) id = rid();
-  const game = createInitialGameState();
   const settings = defaultSettings(input.settings);
+  const game = createInitialGameState(settings.gameMode, settings.darkOptions);
   const room: Room = { id, name: String(input.name || 'Bàn cờ').trim().slice(0, 40) || 'Bàn cờ', password: input.password?.trim() || undefined, ownerPlayerId: input.playerId,
-    createdAt: now(), updatedAt: now(), spectators: [], settings, game, clock: createClock(settings.timeControl), undoStack: [], newGameVotes: {}, chat: [], reactions: [] };
+    createdAt: now(), updatedAt: now(), spectators: [], settings, game, clock: createClock(settings.timeControl), undoStack: [], newGameVotes: {}, chat: [], reactions: [], score: { redWins: 0, blackWins: 0, draws: 0, games: 0 } };
   const side: Color = input.side === 'black' ? 'black' : input.side === 'red' ? 'red' : 'red';
   room[side] = { playerId: input.playerId, name: cleanDisplayName(input.displayName), connected: true, ready: false, joinedAt: now() };
   rooms.set(id, room);
@@ -108,14 +108,14 @@ export function setReady(room: Room, playerId: string, ready: boolean) {
   const role = roleOf(room, playerId); if (role !== 'red' && role !== 'black') return;
   room[role]!.ready = ready;
   if (room.red && room.black && room.red.ready && room.black.ready && room.game.status !== 'playing') {
-    room.game.status = 'playing'; room.game.turn = 'red'; room.game.winner = null; room.game.endReason = null; room.undoStack = []; room.clock = createClock(room.settings.timeControl); startClock(room); addSystemChat(room, 'Ván cờ bắt đầu. Đỏ đi trước.');
+    room.game.status = 'playing'; room.game.turn = 'red'; room.game.winner = null; room.game.endReason = null; room.undoStack = []; room.archivedGameId = undefined; room.clock = createClock(room.settings.timeControl); startClock(room); addSystemChat(room, `${room.settings.gameMode === 'dark' ? 'Ván Cờ Úp' : 'Ván Cờ Tướng'} bắt đầu. Đỏ đi trước.`);
   }
 }
 
 export function resetNewGameIfBothVote(room: Room, playerId: string) {
   room.newGameVotes[playerId] = true;
   if (room.red && room.black && room.newGameVotes[room.red.playerId] && room.newGameVotes[room.black.playerId]) {
-    room.game = resetForNewGame(); room.clock = createClock(room.settings.timeControl); room.undoStack = []; room.pendingDraw = undefined; room.pendingUndo = undefined; room.newGameVotes = {}; room.red.ready = false; room.black.ready = false; addSystemChat(room, 'Hai bên đã đồng ý tạo ván mới.');
+    room.game = resetForNewGame(room.settings.gameMode, room.settings.darkOptions); room.clock = createClock(room.settings.timeControl); room.undoStack = []; room.pendingDraw = undefined; room.pendingUndo = undefined; room.newGameVotes = {}; room.archivedGameId = undefined; room.red.ready = false; room.black.ready = false; addSystemChat(room, 'Hai bên đã đồng ý chơi tiếp. Tỷ số bàn được giữ nguyên.');
   }
 }
 
@@ -123,6 +123,15 @@ export function addSystemChat(room: Room, text: string) { room.chat.push({ id: `
 export function resign(room: Room, color: Color) { room.game = forceEnd(room.game, opposite(color), 'resign'); stopClock(room); addSystemChat(room, `${color === 'red' ? 'Đỏ' : 'Đen'} đã đầu hàng.`); }
 export function drawGame(room: Room) { room.game = forceEnd(room.game, null, 'draw'); stopClock(room); addSystemChat(room, 'Hai bên đồng ý hòa.'); }
 export function timeoutGame(room: Room, color: Color) { room.game = forceEnd(room.game, opposite(color), 'timeout'); stopClock(room); addSystemChat(room, `${color === 'red' ? 'Đỏ' : 'Đen'} rụng kim, thua giờ.`); }
+
+export function updateScoreIfNeeded(room: Room) {
+  if (room.game.status !== 'ended') return;
+  if (room.archivedGameId === room.game.id) return;
+  room.score.games += 1;
+  if (room.game.winner === 'red') room.score.redWins += 1;
+  else if (room.game.winner === 'black') room.score.blackWins += 1;
+  else room.score.draws += 1;
+}
 
 function transferOwner(room: Room) { if (room.ownerPlayerId && roleOf(room, room.ownerPlayerId)) return; room.ownerPlayerId = room.red?.playerId || room.black?.playerId || room.spectators[0]?.playerId || room.ownerPlayerId; }
 

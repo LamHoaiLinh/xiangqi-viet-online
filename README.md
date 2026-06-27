@@ -1,6 +1,6 @@
 # Cờ Tướng Việt - Trí Tuệ Việt
 
-Web game Cờ Tướng online Người vs Người. Stack: React + Vite + TypeScript cho frontend; Node.js + Express + Socket.IO cho backend. Backend phục vụ luôn frontend build để deploy Render dạng Web Service.
+Web game Cờ Tướng / Cờ Úp online Người vs Người. Stack: React + Vite + TypeScript cho frontend; Node.js + Express + Socket.IO cho backend. Backend phục vụ luôn frontend build để deploy Render dạng Web Service.
 
 ## Chạy local
 
@@ -34,6 +34,9 @@ Lưu ý: Render Free có thể sleep, lần đầu mở lại có thể chậm.
 ## Chức năng đã có
 
 - Tạo bàn công khai/riêng tư, có mật khẩu.
+- Chọn chế độ Cờ Tướng hoặc Cờ Úp khi tạo bàn.
+- Cờ Úp có quân úp, lật quân khi di chuyển/ăn quân, sau khi lật quân đi theo chức năng thật.
+- Cờ Úp có tuỳ chọn hoán đổi chức năng theo từng bên: Mã ⇄ Sĩ hoặc Pháo ⇄ Tượng; quân bị hoán đổi có hiệu ứng phát sáng.
 - Danh sách bàn công khai realtime.
 - Người chơi Đỏ/Đen, người quan sát.
 - Sẵn sàng để bắt đầu ván.
@@ -41,14 +44,31 @@ Lưu ý: Render Free có thể sleep, lần đầu mở lại có thể chậm.
 - Đồng hồ không tính giờ, cố định, increment. Server là nguồn thời gian.
 - Xin hoàn cờ cần đối thủ đồng ý.
 - Xin hòa cần đối thủ đồng ý.
-- Đầu hàng, tạo ván mới khi hai bên đồng ý.
+- Đầu hàng, chơi tiếp khi hai bên đồng ý.
+- Bảng tỷ số trong bàn: Đỏ thắng, Đen thắng, Hòa, Tổng ván. Tỷ số không xoá khi hai bên bấm chơi tiếp trong cùng bàn.
 - Chat và thả biểu cảm realtime.
+- Lịch sử nước đi trong từng ván.
+- Lưu 50 ván Cờ Tướng gần nhất và 50 ván Cờ Úp gần nhất trong RAM server để xem lại trong app.
+- Đánh dấu sao ván đấu để giữ ưu tiên ngoài giới hạn 50 ván thường.
 - Tùy chỉnh màu bàn, màu quân, highlight, style quân.
 - Asset PNG người dùng đặt trong `client/public/assets`, thiếu asset vẫn có fallback chữ.
 
-## Giới hạn bản đầu
+## Giới hạn bản hiện tại
 
-- Phòng lưu RAM, server restart sẽ mất bàn.
+- Phòng, tỷ số và kho ván đã lưu đang lưu RAM; server restart sẽ mất dữ liệu tạm.
 - Không có database.
 - Không có AI.
-- Luật chiếu dai/bắt đuổi dai xử lý thực dụng, chưa thay thế trọng tài chuyên nghiệp.
+- Cờ Úp và luật chiếu dai/bắt đuổi dai xử lý thực dụng, chưa thay thế trọng tài chuyên nghiệp.
+
+## Xuất / nhập ván đã lưu
+
+Bản này có thêm chức năng backup thủ công để tránh mất kho ván khi Render restart/redeploy:
+
+1. Vào sảnh game > mục **Ván đã lưu**.
+2. Bấm **Xuất tất cả ván ra JSON** để tải file backup về máy.
+3. Nên lưu file này vào Google Drive hoặc thư mục riêng sau mỗi buổi chơi.
+4. Khi Render mất RAM hoặc deploy lại bị mất ván, vào lại game > **Ván đã lưu** > bấm **Nhập gộp từ JSON** rồi chọn file đã backup.
+5. **Nhập gộp**: thêm/cập nhật ván từ file, không xoá kho hiện tại.
+6. **Nhập thay thế**: xoá kho hiện tại trên server rồi nạp lại từ file JSON. Chỉ dùng khi muốn khôi phục đúng theo file backup.
+
+File backup giữ cả Cờ Tướng, Cờ Úp, dấu sao ưu tiên, tên bàn, tên người chơi, kết quả, tỷ số sau ván và toàn bộ lịch sử nước đi.

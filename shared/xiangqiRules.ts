@@ -1,29 +1,67 @@
-import { BOARD_COLS, BOARD_ROWS, CapturedState, Color, GameState, MoveInput, MoveRecord, MoveValidationResult, Piece, PieceType, Position, opposite, pieceLetterVi } from './gameTypes.js';
+import { BOARD_COLS, BOARD_ROWS, Color, DarkOptions, defaultDarkOptions, GameMode, GameRules, GameState, MoveInput, MoveRecord, MoveValidationResult, Piece, PieceType, Position, opposite, pieceLetterVi, pieceNameVi } from './gameTypes.js';
 
+const gameId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 const clonePiece = (p: Piece): Piece => ({ ...p });
+const cloneMove = (m: MoveRecord): MoveRecord => ({ ...m, from: { ...m.from }, to: { ...m.to }, piece: clonePiece(m.piece), captured: m.captured ? clonePiece(m.captured) : undefined });
 export const cloneGameState = (s: GameState): GameState => ({
   ...s,
+  rules: { mode: s.rules?.mode || 'xiangqi', darkOptions: { ...(s.rules?.darkOptions || defaultDarkOptions) } },
   pieces: s.pieces.map(clonePiece),
   captured: { red: s.captured.red.map(clonePiece), black: s.captured.black.map(clonePiece) },
-  moveHistory: s.moveHistory.map(m => ({ ...m, from: { ...m.from }, to: { ...m.to }, piece: clonePiece(m.piece), captured: m.captured ? clonePiece(m.captured) : undefined })),
-  lastMove: s.lastMove ? { ...s.lastMove, from: { ...s.lastMove.from }, to: { ...s.lastMove.to }, piece: clonePiece(s.lastMove.piece), captured: s.lastMove.captured ? clonePiece(s.lastMove.captured) : undefined } : undefined,
+  moveHistory: s.moveHistory.map(cloneMove),
+  lastMove: s.lastMove ? cloneMove(s.lastMove) : undefined,
   repetition: { ...s.repetition }
 });
 
-export function createInitialGameState(): GameState {
+const normalizeRules = (mode: GameMode = 'xiangqi', darkOptions?: Partial<DarkOptions>): GameRules => ({
+  mode,
+  darkOptions: {
+    redSwap: darkOptions?.redSwap || 'none',
+    blackSwap: darkOptions?.blackSwap || 'none'
+  }
+});
+
+const initialSlots = (color: Color): Array<{ type: PieceType; row: number; col: number; index: number }> => {
+  const top = color === 'black';
+  const r0 = top ? 0 : 9;
+  const rPawn = top ? 3 : 6;
+  const rCannon = top ? 2 : 7;
+  return [
+    { type: 'rook', row: r0, col: 0, index: 1 }, { type: 'horse', row: r0, col: 1, index: 1 }, { type: 'elephant', row: r0, col: 2, index: 1 },
+    { type: 'advisor', row: r0, col: 3, index: 1 }, { type: 'general', row: r0, col: 4, index: 1 }, { type: 'advisor', row: r0, col: 5, index: 2 },
+    { type: 'elephant', row: r0, col: 6, index: 2 }, { type: 'horse', row: r0, col: 7, index: 2 }, { type: 'rook', row: r0, col: 8, index: 2 },
+    { type: 'cannon', row: rCannon, col: 1, index: 1 }, { type: 'cannon', row: rCannon, col: 7, index: 2 },
+    { type: 'pawn', row: rPawn, col: 0, index: 1 }, { type: 'pawn', row: rPawn, col: 2, index: 2 }, { type: 'pawn', row: rPawn, col: 4, index: 3 },
+    { type: 'pawn', row: rPawn, col: 6, index: 4 }, { type: 'pawn', row: rPawn, col: 8, index: 5 }
+  ];
+};
+
+function shuffledTypes(slots: Array<{ type: PieceType }>): PieceType[] {
+  const arr = slots.filter(s => s.type !== 'general').map(s => s.type);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+export function createInitialGameState(mode: GameMode = 'xiangqi', darkOptions?: Partial<DarkOptions>): GameState {
+  const rules = normalizeRules(mode, darkOptions);
   const pieces: Piece[] = [];
-  const add = (color: Color, type: PieceType, row: number, col: number, index = 0) => pieces.push({ id: `${color}-${type}-${index}-${row}-${col}`, color, type, row, col });
-  // Đen ở trên, Đỏ ở dưới. Đỏ đi trước và đi hướng lên phía hàng nhỏ hơn.
   (['black', 'red'] as Color[]).forEach(color => {
-    const top = color === 'black';
-    const r0 = top ? 0 : 9;
-    const rPawn = top ? 3 : 6;
-    const rCannon = top ? 2 : 7;
-    add(color, 'rook', r0, 0, 1); add(color, 'horse', r0, 1, 1); add(color, 'elephant', r0, 2, 1); add(color, 'advisor', r0, 3, 1); add(color, 'general', r0, 4, 1); add(color, 'advisor', r0, 5, 2); add(color, 'elephant', r0, 6, 2); add(color, 'horse', r0, 7, 2); add(color, 'rook', r0, 8, 2);
-    add(color, 'cannon', rCannon, 1, 1); add(color, 'cannon', rCannon, 7, 2);
-    [0,2,4,6,8].forEach((c, i) => add(color, 'pawn', rPawn, c, i + 1));
+    const slots = initialSlots(color);
+    const actual = shuffledTypes(slots);
+    let k = 0;
+    for (const slot of slots) {
+      if (rules.mode === 'dark' && slot.type !== 'general') {
+        const type = actual[k++];
+        pieces.push({ id: `${color}-dark-${slot.type}-${slot.index}-${slot.row}-${slot.col}`, color, type, row: slot.row, col: slot.col, hidden: true, moveAs: slot.type, startType: slot.type });
+      } else {
+        pieces.push({ id: `${color}-${slot.type}-${slot.index}-${slot.row}-${slot.col}`, color, type: slot.type, row: slot.row, col: slot.col, hidden: false, moveAs: slot.type, startType: slot.type });
+      }
+    }
   });
-  const state: GameState = { status: 'waiting', pieces, turn: 'red', winner: null, endReason: null, moveHistory: [], captured: { red: [], black: [] }, repetition: {} };
+  const state: GameState = { id: gameId(), rules, status: 'waiting', pieces, turn: 'red', winner: null, endReason: null, moveHistory: [], captured: { red: [], black: [] }, repetition: {} };
   state.repetition[boardKey(state)] = 1;
   return state;
 }
@@ -39,6 +77,7 @@ function inPalace(color: Color, pos: Position): boolean {
   return rows.includes(pos.row) && pos.col >= 3 && pos.col <= 5;
 }
 function crossedRiver(color: Color, row: number): boolean { return color === 'red' ? row <= 4 : row >= 5; }
+function isDarkRevealed(state: GameState, piece: Piece): boolean { return state.rules?.mode === 'dark' && !piece.hidden && piece.type !== 'general'; }
 function countBetween(state: GameState, a: Position, b: Position): number {
   let count = 0;
   if (a.row === b.row) {
@@ -56,32 +95,54 @@ function addIfFreeOrEnemy(state: GameState, out: Position[], color: Color, pos: 
   if (!target || target.color !== color) out.push(pos);
 }
 
+export function effectivePieceType(state: GameState, piece: Piece): PieceType {
+  if (state.rules?.mode !== 'dark') return piece.type;
+  if (piece.hidden) return piece.moveAs || piece.startType || piece.type;
+  const swap = piece.color === 'red' ? state.rules.darkOptions.redSwap : state.rules.darkOptions.blackSwap;
+  if (swap === 'horse_advisor') {
+    if (piece.type === 'horse') return 'advisor';
+    if (piece.type === 'advisor') return 'horse';
+  }
+  if (swap === 'cannon_elephant') {
+    if (piece.type === 'cannon') return 'elephant';
+    if (piece.type === 'elephant') return 'cannon';
+  }
+  return piece.type;
+}
+
+export function isSwapAffected(state: GameState, piece: Piece): boolean {
+  if (state.rules?.mode !== 'dark' || piece.hidden) return false;
+  return effectivePieceType(state, piece) !== piece.type;
+}
+
 export function generatePseudoMoves(state: GameState, piece: Piece): Position[] {
   const out: Position[] = [];
-  const from = { row: piece.row, col: piece.col };
-  if (piece.type === 'general') {
-    // Tướng/Soái đi 1 ô ngang/dọc trong cung. Nước bắt mặt tướng được xét ở kiểm tra chiếu.
+  const type = effectivePieceType(state, piece);
+  const darkRevealed = isDarkRevealed(state, piece);
+  if (type === 'general') {
+    // Tướng/Soái luôn đi 1 ô ngang/dọc trong cung, kể cả Cờ Úp.
     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
       const to = { row: piece.row + dr, col: piece.col + dc };
       if (inPalace(piece.color, to)) addIfFreeOrEnemy(state, out, piece.color, to);
     });
   }
-  if (piece.type === 'advisor') {
+  if (type === 'advisor') {
+    // Cờ Tướng: Sĩ ở trong cung. Cờ Úp sau khi lật: Sĩ được đi chéo 1 ô toàn bàn.
     [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
       const to = { row: piece.row + dr, col: piece.col + dc };
-      if (inPalace(piece.color, to)) addIfFreeOrEnemy(state, out, piece.color, to);
+      if ((darkRevealed || inPalace(piece.color, to)) && isInside(to)) addIfFreeOrEnemy(state, out, piece.color, to);
     });
   }
-  if (piece.type === 'elephant') {
-    // Tượng đi chéo 2 điểm, không qua sông và bị chặn mắt tượng ở ô giữa.
+  if (type === 'elephant') {
+    // Cờ Tướng: Tượng không qua sông. Cờ Úp sau khi lật: Tượng được qua sông nhưng vẫn bị cản mắt Tượng.
     [[2,2],[2,-2],[-2,2],[-2,-2]].forEach(([dr, dc]) => {
       const eye = { row: piece.row + dr / 2, col: piece.col + dc / 2 };
       const to = { row: piece.row + dr, col: piece.col + dc };
-      const legalSide = piece.color === 'red' ? to.row >= 5 : to.row <= 4;
+      const legalSide = darkRevealed || (piece.color === 'red' ? to.row >= 5 : to.row <= 4);
       if (isInside(to) && legalSide && !pieceAt(state, eye)) addIfFreeOrEnemy(state, out, piece.color, to);
     });
   }
-  if (piece.type === 'horse') {
+  if (type === 'horse') {
     // Mã đi chữ nhật. Nếu ô chân Mã bị chặn thì không được đi hướng đó.
     const moves = [
       { dr: -2, dc: -1, leg: { row: piece.row - 1, col: piece.col } }, { dr: -2, dc: 1, leg: { row: piece.row - 1, col: piece.col } },
@@ -91,14 +152,14 @@ export function generatePseudoMoves(state: GameState, piece: Piece): Position[] 
     ];
     moves.forEach(m => { if (!pieceAt(state, m.leg)) addIfFreeOrEnemy(state, out, piece.color, { row: piece.row + m.dr, col: piece.col + m.dc }); });
   }
-  if (piece.type === 'rook' || piece.type === 'cannon') {
+  if (type === 'rook' || type === 'cannon') {
     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
       let jumped = false;
       for (let step = 1; step < 10; step++) {
         const to = { row: piece.row + dr * step, col: piece.col + dc * step };
         if (!isInside(to)) break;
         const target = pieceAt(state, to);
-        if (piece.type === 'rook') {
+        if (type === 'rook') {
           if (!target) out.push(to); else { if (target.color !== piece.color) out.push(to); break; }
         } else {
           // Pháo đi như Xe khi không ăn. Khi ăn phải có đúng 1 quân làm ngòi ở giữa.
@@ -108,7 +169,7 @@ export function generatePseudoMoves(state: GameState, piece: Piece): Position[] 
       }
     });
   }
-  if (piece.type === 'pawn') {
+  if (type === 'pawn') {
     // Tốt chỉ đi thẳng trước khi qua sông. Sau khi qua sông được đi ngang, không được đi lùi.
     const dir = piece.color === 'red' ? -1 : 1;
     addIfFreeOrEnemy(state, out, piece.color, { row: piece.row + dir, col: piece.col });
@@ -142,19 +203,26 @@ export function isInCheck(state: GameState, color: Color): boolean {
   return isSquareAttacked(state, { row: general.row, col: general.col }, opposite(color));
 }
 
-function movePieceUnsafe(state: GameState, from: Position, to: Position): { next: GameState; moved?: Piece; captured?: Piece } {
+function movePieceUnsafe(state: GameState, from: Position, to: Position): { next: GameState; moved?: Piece; captured?: Piece; wasHidden?: boolean; movedAs?: PieceType; revealedType?: PieceType } {
   const next = cloneGameState(state);
   const idx = next.pieces.findIndex(p => p.row === from.row && p.col === from.col);
   if (idx < 0) return { next };
+  const movingId = next.pieces[idx].id;
+  const movingBefore = clonePiece(next.pieces[idx]);
   const captureIdx = next.pieces.findIndex((p, i) => i !== idx && p.row === to.row && p.col === to.col);
   let captured: Piece | undefined;
   if (captureIdx >= 0) {
     captured = clonePiece(next.pieces[captureIdx]);
     next.pieces.splice(captureIdx, 1);
   }
-  const moved = next.pieces.find(p => p.id === state.pieces[idx].id)!;
+  const moved = next.pieces.find(p => p.id === movingId)!;
   moved.row = to.row; moved.col = to.col;
-  return { next, moved: clonePiece(moved), captured };
+  let revealedType: PieceType | undefined;
+  if (state.rules?.mode === 'dark' && moved.hidden) {
+    moved.hidden = false;
+    revealedType = moved.type;
+  }
+  return { next, moved: clonePiece(moved), captured, wasHidden: !!movingBefore.hidden, movedAs: movingBefore.hidden ? (movingBefore.moveAs || movingBefore.startType || movingBefore.type) : effectivePieceType(state, movingBefore), revealedType };
 }
 
 export function getLegalMoves(state: GameState, piece: Piece): Position[] {
@@ -169,13 +237,18 @@ export function hasAnyLegalMove(state: GameState, color: Color): boolean {
 }
 
 export function boardKey(state: GameState): string {
-  const list = state.pieces.map(p => `${p.color[0]}${p.type[0]}${p.row}${p.col}`).sort().join('|');
-  return `${state.turn}:${list}`;
+  const list = state.pieces.map(p => `${p.color[0]}${p.hidden ? 'U' + (p.moveAs || '') : p.type}${p.row}${p.col}`).sort().join('|');
+  return `${state.turn}:${state.rules?.mode || 'xiangqi'}:${list}`;
 }
 
-function makeNotation(piece: Piece, from: Position, to: Position, captured?: Piece): string {
+function makeNotation(state: GameState, before: Piece, moved: Piece, from: Position, to: Position, captured?: Piece, revealedType?: PieceType, movedAs?: PieceType): string {
   const dir = to.row < from.row ? '+' : to.row > from.row ? '-' : '=';
-  return `${piece.color === 'red' ? 'Đỏ' : 'Đen'} ${pieceLetterVi[piece.type]}${from.col + 1}${dir}${to.col + 1}${captured ? 'x' : ''}`;
+  const color = before.color === 'red' ? 'Đỏ' : 'Đen';
+  const shownType = before.hidden ? 'Úp' : pieceLetterVi[before.type];
+  const acted = before.hidden && movedAs ? `(${pieceLetterVi[movedAs]})` : '';
+  const swap = !before.hidden && state.rules?.mode === 'dark' && effectivePieceType(state, before) !== before.type ? `→${pieceLetterVi[effectivePieceType(state, before)]}` : '';
+  const reveal = revealedType ? ` · lật ${pieceNameVi[revealedType]}` : '';
+  return `${color} ${shownType}${acted}${swap}${from.col + 1}${dir}${to.col + 1}${captured ? 'x' : ''}${reveal}`;
 }
 
 export function applyLegalMove(state: GameState, input: MoveInput, now = Date.now()): MoveValidationResult {
@@ -185,14 +258,15 @@ export function applyLegalMove(state: GameState, input: MoveInput, now = Date.no
   if (piece.color !== state.turn) return { ok: false, reason: 'Chưa tới lượt bên này.' };
   const legal = getLegalMoves(state, piece);
   if (!legal.some(m => samePos(m, input.to))) return { ok: false, reason: 'Nước đi không hợp lệ hoặc làm Tướng bị chiếu.' , legalMoves: legal };
-  const { next, moved, captured } = movePieceUnsafe(state, input.from, input.to);
+  const { next, moved, captured, movedAs, revealedType } = movePieceUnsafe(state, input.from, input.to);
   if (!moved) return { ok: false, reason: 'Không thể di chuyển quân.' };
   next.turn = opposite(state.turn);
   if (captured) next.captured[captured.color].push(captured);
   const move: MoveRecord = {
     id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
-    from: { ...input.from }, to: { ...input.to }, piece: { ...piece }, captured,
-    notation: makeNotation(piece, input.from, input.to, captured), createdAt: now
+    from: { ...input.from }, to: { ...input.to }, piece: { ...moved }, captured,
+    notation: makeNotation(state, piece, moved, input.from, input.to, captured, revealedType, movedAs), createdAt: now,
+    revealedType, movedAs
   };
   const checked = isInCheck(next, next.turn) ? next.turn : null;
   move.checkColor = checked;
@@ -217,8 +291,8 @@ export function forceEnd(state: GameState, winner: Color | null, endReason: Game
   return next;
 }
 
-export function resetForNewGame(): GameState {
-  const state = createInitialGameState();
+export function resetForNewGame(mode: GameMode = 'xiangqi', darkOptions?: Partial<DarkOptions>): GameState {
+  const state = createInitialGameState(mode, darkOptions);
   state.status = 'waiting';
   return state;
 }
