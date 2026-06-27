@@ -1,0 +1,142 @@
+{
+  "pack_name": "Cờ Tướng Việt - Trí Tuệ Việt Asset Pack",
+  "version": "1.0.0",
+  "style": "Traditional East Asian + modern clean web UI",
+  "board": {
+    "image_size": {
+      "width": 1536,
+      "height": 1696
+    },
+    "grid": {
+      "columns": 9,
+      "rows": 10,
+      "margin_px": 128,
+      "cell_px": 160,
+      "intersections": {
+        "x": [
+          128,
+          288,
+          448,
+          608,
+          768,
+          928,
+          1088,
+          1248,
+          1408
+        ],
+        "y": [
+          128,
+          288,
+          448,
+          608,
+          768,
+          928,
+          1088,
+          1248,
+          1408,
+          1568
+        ]
+      },
+      "river_between_rows": [
+        4,
+        5
+      ],
+      "palaces": [
+        {
+          "side": "red_top",
+          "cols": [
+            3,
+            4,
+            5
+          ],
+          "rows": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "side": "black_bottom",
+          "cols": [
+            3,
+            4,
+            5
+          ],
+          "rows": [
+            7,
+            8,
+            9
+          ]
+        }
+      ]
+    },
+    "files": {
+      "light": "boards/board_light.png",
+      "dark": "boards/board_dark.png",
+      "river_overlay": "boards/river_overlay.png",
+      "palace_overlay": "boards/palace_overlay.png"
+    }
+  },
+  "pieces": {
+    "size_px": 512,
+    "transparent_background": true,
+    "files": {
+      "piece_red_general.png": "pieces/piece_red_general.png",
+      "piece_red_advisor.png": "pieces/piece_red_advisor.png",
+      "piece_red_elephant.png": "pieces/piece_red_elephant.png",
+      "piece_red_rook.png": "pieces/piece_red_rook.png",
+      "piece_red_horse.png": "pieces/piece_red_horse.png",
+      "piece_red_cannon.png": "pieces/piece_red_cannon.png",
+      "piece_red_pawn.png": "pieces/piece_red_pawn.png",
+      "piece_black_general.png": "pieces/piece_black_general.png",
+      "piece_black_advisor.png": "pieces/piece_black_advisor.png",
+      "piece_black_elephant.png": "pieces/piece_black_elephant.png",
+      "piece_black_rook.png": "pieces/piece_black_rook.png",
+      "piece_black_horse.png": "pieces/piece_black_horse.png",
+      "piece_black_cannon.png": "pieces/piece_black_cannon.png",
+      "piece_black_pawn.png": "pieces/piece_black_pawn.png"
+    }
+  },
+  "effects": {
+    "transparent_background": true,
+    "files": {
+      "selected_glow": "effects/piece_selected_glow.png",
+      "legal_move_marker": "effects/legal_move_marker.png",
+      "last_move_marker": "effects/last_move_marker.png",
+      "check_warning": "effects/check_warning_effect.png",
+      "capture": "effects/capture_effect.png"
+    }
+  },
+  "icons": {
+    "format": "svg",
+    "transparent_background": true,
+    "files": {
+      "icon_create_room.svg": "icons/icon_create_room.svg",
+      "icon_join_room.svg": "icons/icon_join_room.svg",
+      "icon_copy_link.svg": "icons/icon_copy_link.svg",
+      "icon_reset_board.svg": "icons/icon_reset_board.svg",
+      "icon_resign.svg": "icons/icon_resign.svg",
+      "icon_draw.svg": "icons/icon_draw.svg",
+      "icon_sound_on.svg": "icons/icon_sound_on.svg",
+      "icon_sound_off.svg": "icons/icon_sound_off.svg",
+      "icon_theme.svg": "icons/icon_theme.svg",
+      "icon_palette.svg": "icons/icon_palette.svg"
+    }
+  },
+  "sounds": {
+    "format": "mp3",
+    "placeholder": true,
+    "files": {
+      "move_sound.mp3": "sounds/move_sound.mp3",
+      "capture_sound.mp3": "sounds/capture_sound.mp3",
+      "check_sound.mp3": "sounds/check_sound.mp3",
+      "victory_sound.mp3": "sounds/victory_sound.mp3",
+      "draw_sound.mp3": "sounds/draw_sound.mp3"
+    }
+  },
+  "notes": [
+    "PNG pieces/effects/icons have transparent backgrounds.",
+    "Board files are opaque game backgrounds.",
+    "Coordinates in manifest help map legal-move highlights on Canvas/React."
+  ]
+}

@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const base = path.resolve('client/public/assets');
+const required = ['boards/board_light.png','boards/board_dark.png','boards/river_overlay.png','boards/palace_overlay.png','effects/capture_effect.png','effects/check_warning_effect.png','effects/last_move_marker.png','effects/legal_move_marker.png','effects/piece_selected_glow.png','sounds/move_sound.mp3','sounds/capture_sound.mp3','sounds/check_sound.mp3','sounds/victory_sound.mp3'];
+for (const color of ['red','black']) for (const type of ['general','advisor','elephant','rook','horse','cannon','pawn']) required.push(`pieces/piece_${color}_${type}.png`);
+const ok = [], miss = [];
+for (const r of required) (fs.existsSync(path.join(base, r)) ? ok : miss).push(r);
+const md = `# ASSET_REPORT\n\n## Asset đã có\n${ok.map(x => '- ' + x).join('\n')}\n\n## Asset đang thiếu\n${miss.length ? miss.map(x => '- ' + x).join('\n') : '- Không thiếu asset bắt buộc chính.'}\n`;
+fs.writeFileSync(path.join(base, 'ASSET_REPORT.md'), md);
+console.log(md);
