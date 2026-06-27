@@ -56,44 +56,46 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   const boardImg = theme.theme === 'dark' ? `${ASSET}/boards/board_dark.png` : `${ASSET}/boards/board_light.png`;
 
   return <div className="board-wrap" style={style}>
-    <div className={`board ${viewerColor === 'black' ? 'board-black-view' : 'board-red-view'}`} style={{ backgroundImage: `linear-gradient(var(--board), var(--board)), url(${boardImg})` }}>
-      <div className="river-label">楚 河&nbsp;&nbsp; SỞ HÀ &nbsp;&nbsp; HÁN GIỚI</div>
-      {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
-        const displayPos = { row: r, col: c };
-        const actual = toActual(displayPos);
-        return <button
-          key={`${r}-${c}`}
-          className={`point ${legal.some(m => same(m, actual)) ? 'legal' : ''} ${same(selected, actual) ? 'selected' : ''} ${game.lastMove && (same(game.lastMove.from, actual) || same(game.lastMove.to, actual)) ? 'last' : ''}`}
-          style={{ left: `${(c / 8) * 100}%`, top: `${(r / 9) * 100}%` }}
-          onClick={() => onPoint(displayPos)}
-          aria-label={`${actual.row},${actual.col}`}
-        />;
-      }))}
+    <div className="board-frame">
+      <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${boardImg})`, backgroundColor: theme.boardColor }}>
+        <div className="river-label"><span className="river-left">楚河</span><span className="river-mid">SỞ HÀ - HÁN GIỚI</span><span className="river-right">漢界</span></div>
+        {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
+          const displayPos = { row: r, col: c };
+          const actual = toActual(displayPos);
+          return <button
+            key={`${r}-${c}`}
+            className={`point ${legal.some(m => same(m, actual)) ? 'legal' : ''} ${same(selected, actual) ? 'selected' : ''} ${game.lastMove && (same(game.lastMove.from, actual) || same(game.lastMove.to, actual)) ? 'last' : ''}`}
+            style={{ left: `${(c / 8) * 100}%`, top: `${(r / 9) * 100}%` }}
+            onClick={() => onPoint(displayPos)}
+            aria-label={`${actual.row},${actual.col}`}
+          />;
+        }))}
 
-      {game.pieces.map((p: PieceModel) => {
-        const display = toDisplay({ row: p.row, col: p.col });
-        const isSelected = same(selected, { row: p.row, col: p.col });
-        return <div
-          key={p.id}
-          className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''}`}
-          style={{ left: `${(display.col / 8) * 100}%`, top: `${(display.row / 9) * 100}%` }}
-          onClick={() => onPoint(display)}
-        >
-          <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
-        </div>;
-      })}
+        {game.pieces.map((p: PieceModel) => {
+          const display = toDisplay({ row: p.row, col: p.col });
+          const isSelected = same(selected, { row: p.row, col: p.col });
+          return <div
+            key={p.id}
+            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''}`}
+            style={{ left: `${(display.col / 8) * 100}%`, top: `${(display.row / 9) * 100}%` }}
+            onClick={() => onPoint(display)}
+          >
+            <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
+          </div>;
+        })}
 
-      {game.status === 'waiting' && <div className="ready-overlay">
-        <div className="ready-overlay-card">
-          <div className="ready-status-row">
-            <span>Đỏ: {room.red?.name || 'trống'} {room.red?.ready ? '✅' : '⏳'}</span>
-            <span>Đen: {room.black?.name || 'trống'} {room.black?.ready ? '✅' : '⏳'}</span>
+        {game.status === 'waiting' && <div className="ready-overlay">
+          <div className="ready-overlay-card">
+            <div className="ready-status-row">
+              <span>Đỏ: {room.red?.name || 'trống'} {room.red?.ready ? '✅' : '⏳'}</span>
+              <span>Đen: {room.black?.name || 'trống'} {room.black?.ready ? '✅' : '⏳'}</span>
+            </div>
+            {canMove
+              ? <button className="ready-btn" onClick={() => socket?.emit('game:ready', { ready: !seat?.ready })}>{seat?.ready ? 'Hủy sẵn sàng' : 'Sẵn sàng'}</button>
+              : <div className="ready-wait-text">Chờ hai người chơi bấm Sẵn sàng</div>}
           </div>
-          {canMove
-            ? <button className="ready-btn" onClick={() => socket?.emit('game:ready', { ready: !seat?.ready })}>{seat?.ready ? 'Hủy sẵn sàng' : 'Sẵn sàng'}</button>
-            : <div className="ready-wait-text">Chờ hai người chơi bấm Sẵn sàng</div>}
-        </div>
-      </div>}
+        </div>}
+      </div>
     </div>
   </div>;
 }
