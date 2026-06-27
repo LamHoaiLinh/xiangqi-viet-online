@@ -20,6 +20,6 @@ export default function Board({ game, role, socket, theme }: { game: any; role: 
   return <div className="board-wrap" style={style}><div className="board" style={{ backgroundImage: `linear-gradient(var(--board), var(--board)), url(${boardImg})` }}>
     <div className="river-label">楚 河&nbsp;&nbsp; HÀN GIỚI</div>
     {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => <button key={`${r}-${c}`} className={`point ${legal.some(m => m.row === r && m.col === c) ? 'legal' : ''} ${same(selected || undefined, {row:r,col:c}) ? 'selected' : ''} ${game.lastMove && (same(game.lastMove.from,{row:r,col:c}) || same(game.lastMove.to,{row:r,col:c})) ? 'last' : ''}`} style={{ left: `${(c / 8) * 100}%`, top: `${(r / 9) * 100}%` }} onClick={() => onPoint({ row: r, col: c })} aria-label={`${r},${c}`} />))}
-    {game.pieces.map((p: PieceModel) => <div key={p.id} className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''}`} style={{ left: `${(p.col / 8) * 100}%`, top: `${(p.row / 9) * 100}%` }} onClick={() => onPoint({ row: p.row, col: p.col })}><Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme}/></div>)}
+    {game.pieces.map((p: PieceModel) => <div key={p.id} className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''}`} style={{ left: `${(p.col / 8) * 100}%`, top: `${(p.row / 9) * 100}%` }} onClick={() => onPoint({ row: p.row, col: p.col })}><Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/></div>)}
   </div></div>;
 }
