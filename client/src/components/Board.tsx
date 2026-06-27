@@ -5,6 +5,8 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
+const pctX = (col: number) => `${(col / 8) * 100}%`;
+const pctY = (row: number) => `${(row / 9) * 100}%`;
 
 export default function Board({ room, game, role, socket, theme }: { room: any; game: any; role: string | null; socket: any; theme: any }) {
   const [selected, setSelected] = useState<Position | null>(null);
@@ -15,7 +17,6 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
 
   const toDisplay = (pos: Position): Position => viewerColor === 'black' ? { row: 9 - pos.row, col: 8 - pos.col } : pos;
   const toActual = (pos: Position): Position => viewerColor === 'black' ? { row: 9 - pos.row, col: 8 - pos.col } : pos;
-
   const selectedPiece = selected ? pieceAt(game, selected) : undefined;
   const legal = useMemo(() => selectedPiece ? getLegalMoves(game, selectedPiece) : [], [game, selectedPiece]);
 
@@ -44,28 +45,35 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   };
 
   const style: any = {
-    '--board': theme.boardColor,
-    '--line': theme.lineColor,
-    '--river': theme.riverColor,
-    '--legal': theme.highlightColor,
-    '--selected': theme.selectedColor,
-    '--check': theme.checkColor,
-    '--redPiece': theme.redPieceColor,
-    '--blackPiece': theme.blackPieceColor
+    '--board': theme.boardColor || '#f4d39a',
+    '--line': theme.lineColor || '#6d3518',
+    '--river': theme.riverColor || '#d9f2ff',
+    '--legal': theme.highlightColor || '#48b87a',
+    '--selected': theme.selectedColor || '#f2c94c',
+    '--check': theme.checkColor || '#ff4d4f',
+    '--redPiece': theme.redPieceColor || '#b51f1f',
+    '--blackPiece': theme.blackPieceColor || '#222222'
   };
-  const boardImg = theme.theme === 'dark' ? `${ASSET}/boards/board_dark.png` : `${ASSET}/boards/board_light.png`;
 
-  return <div className="board-wrap" style={style}>
-    <div className="board-frame">
-      <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${boardImg})`, backgroundColor: theme.boardColor }}>
-        <div className="river-label"><span className="river-left">楚河</span><span className="river-mid">SỞ HÀ - HÁN GIỚI</span><span className="river-right">漢界</span></div>
+  const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r) }} />);
+  const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c) }} />);
+
+  return <div className="board-shell" style={style}>
+    <div className="board-inner">
+      <div className={`board board-${viewerColor}`}>
+        <div className="board-surface" />
+        <div className="grid-lines">{horizontalLines}{verticalLines}</div>
+        <div className="palace palace-top"><span/><span/></div>
+        <div className="palace palace-bottom"><span/><span/></div>
+        <div className="river-label"><b>楚河</b><strong>SỞ HÀ - HÁN GIỚI</strong><b>漢界</b></div>
+
         {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
           const displayPos = { row: r, col: c };
           const actual = toActual(displayPos);
           return <button
             key={`${r}-${c}`}
             className={`point ${legal.some(m => same(m, actual)) ? 'legal' : ''} ${same(selected, actual) ? 'selected' : ''} ${game.lastMove && (same(game.lastMove.from, actual) || same(game.lastMove.to, actual)) ? 'last' : ''}`}
-            style={{ left: `${(c / 8) * 100}%`, top: `${(r / 9) * 100}%` }}
+            style={{ left: pctX(c), top: pctY(r) }}
             onClick={() => onPoint(displayPos)}
             aria-label={`${actual.row},${actual.col}`}
           />;
@@ -77,7 +85,7 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
           return <div
             key={p.id}
             className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''}`}
-            style={{ left: `${(display.col / 8) * 100}%`, top: `${(display.row / 9) * 100}%` }}
+            style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >
             <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>

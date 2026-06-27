@@ -3,6 +3,7 @@ import { Socket } from 'socket.io-client';
 import { createSocket, getPlayerId } from './online/socket';
 import Lobby from './components/Lobby';
 import GameScreen from './components/GameScreen';
+import MusicPlayer from './components/MusicPlayer';
 
 export default function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -29,6 +30,7 @@ export default function App() {
   const leave = () => { socket?.emit('room:leave'); setRoom(null); setRole(null); history.replaceState(null, '', location.pathname); };
 
   return <div className="app-shell">
+    <MusicPlayer />
     {error && <div className="toast">{error}</div>}
     {!room ? <Lobby socket={socket} rooms={rooms} archives={archives} playerId={playerId} /> : <GameScreen socket={socket} room={room} role={role} playerId={playerId} onLeave={leave} />}
   </div>;
