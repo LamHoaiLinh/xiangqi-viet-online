@@ -1,2 +1,2 @@
 body:has(.game-screen) { background: linear-gradient(180deg, #fff4df, #f8efe3); }
-@media (prefers-color-scheme: dark) { :root { background: #1f1c1a; color: #f8ead4; } }
+@media (prefers-color-scheme: dark) { :root { background: #1f1c1a; color: #2d2013; } body { background: #1f1c1a; } }
