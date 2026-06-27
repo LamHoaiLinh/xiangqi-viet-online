@@ -13,7 +13,8 @@ export const defaultTheme: ThemeSettings = {
 export const defaultTimeControl: TimeControl = { mode: 'increment', initialMs: 15 * 60_000, incrementMs: 5_000 };
 export const defaultSettings = (partial?: Partial<RoomSettings>): RoomSettings => ({
   allowSpectators: true, spectatorChatEnabled: true, spectatorReactionsEnabled: true, isPublic: true, locked: false, pauseOnDisconnect: false,
-  timeControl: defaultTimeControl, theme: defaultTheme, gameMode: 'xiangqi', darkOptions: defaultDarkOptions, ...partial
+  timeControl: defaultTimeControl, theme: defaultTheme, gameMode: 'xiangqi', darkOptions: defaultDarkOptions,
+  revealCapturedHiddenToAll: false, revealCapturedHiddenToOwner: true, ...partial
 });
 
 function rid() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }

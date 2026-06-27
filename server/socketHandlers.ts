@@ -55,7 +55,9 @@ export function registerSocketHandlers(io: Server) {
           timeControl: tc,
           theme: payload?.theme,
           gameMode: normalizeGameMode(payload?.gameMode),
-          darkOptions: normalizeDarkOptions(payload?.darkOptions)
+          darkOptions: normalizeDarkOptions(payload?.darkOptions),
+          revealCapturedHiddenToAll: !!payload?.revealCapturedHiddenToAll,
+          revealCapturedHiddenToOwner: payload?.revealCapturedHiddenToOwner !== false
         }
       });
       socket.data.roomId = room.id; socket.data.playerId = playerId; socket.join(room.id);
@@ -94,6 +96,8 @@ export function registerSocketHandlers(io: Server) {
       if (typeof payload?.spectatorChatEnabled === 'boolean') room.settings.spectatorChatEnabled = payload.spectatorChatEnabled;
       if (typeof payload?.spectatorReactionsEnabled === 'boolean') room.settings.spectatorReactionsEnabled = payload.spectatorReactionsEnabled;
       if (typeof payload?.locked === 'boolean' && room.game.status !== 'playing') room.settings.locked = payload.locked;
+      if (typeof payload?.revealCapturedHiddenToAll === 'boolean') room.settings.revealCapturedHiddenToAll = payload.revealCapturedHiddenToAll;
+      if (typeof payload?.revealCapturedHiddenToOwner === 'boolean') room.settings.revealCapturedHiddenToOwner = payload.revealCapturedHiddenToOwner;
       if (payload?.theme) room.settings.theme = { ...room.settings.theme, ...payload.theme };
       if (room.game.status !== 'playing' && (payload?.gameMode === 'xiangqi' || payload?.gameMode === 'dark')) room.settings.gameMode = payload.gameMode;
       if (room.game.status !== 'playing' && payload?.darkOptions) room.settings.darkOptions = normalizeDarkOptions(payload.darkOptions);

@@ -9,7 +9,7 @@ export interface Spectator { playerId: string; socketId?: string; name: string; 
 export interface TimeControl { mode: TimeMode; initialMs: number; incrementMs: number }
 export interface ClockState { enabled: boolean; redMs: number; blackMs: number; runningColor: Color | null; lastServerTs: number | null; timeoutColor?: Color | null }
 export interface ThemeSettings { theme: 'light' | 'dark'; boardColor: string; lineColor: string; riverColor: string; redPieceColor: string; blackPieceColor: string; highlightColor: string; selectedColor: string; checkColor: string; pieceStyle: 'asset' | 'han' | 'vi' }
-export interface RoomSettings { allowSpectators: boolean; spectatorChatEnabled: boolean; spectatorReactionsEnabled: boolean; isPublic: boolean; locked: boolean; timeControl: TimeControl; theme: ThemeSettings; pauseOnDisconnect: boolean; gameMode: GameMode; darkOptions: DarkOptions }
+export interface RoomSettings { allowSpectators: boolean; spectatorChatEnabled: boolean; spectatorReactionsEnabled: boolean; isPublic: boolean; locked: boolean; timeControl: TimeControl; theme: ThemeSettings; pauseOnDisconnect: boolean; gameMode: GameMode; darkOptions: DarkOptions; revealCapturedHiddenToAll: boolean; revealCapturedHiddenToOwner: boolean }
 export interface ScoreState { redWins: number; blackWins: number; draws: number; games: number }
 export interface ChatMessage { id: string; playerId: string; name: string; role: Role | 'system'; text: string; createdAt: number }
 export interface ReactionMessage { id: string; playerId: string; name: string; role: Role; emoji: string; createdAt: number }
