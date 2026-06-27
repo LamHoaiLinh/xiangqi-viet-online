@@ -57,6 +57,8 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
 
   const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r) }} />);
   const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c) }} />);
+  const showUndo = room.pendingUndo && canMove && room.pendingUndo.by !== role;
+  const showDraw = room.pendingDraw && canMove && room.pendingDraw.by !== role;
 
   return <div className="board-shell" style={style}>
     <div className="board-inner">
@@ -91,6 +93,18 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
             <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
           </div>;
         })}
+
+        {(showUndo || showDraw) && <div className="request-overlay">
+          <div className="request-overlay-card">
+            <h3>{showUndo ? 'Xin hoàn cờ' : 'Xin hòa cờ'}</h3>
+            <p>{showUndo ? 'Đối thủ muốn hoàn lại nước vừa đi.' : 'Đối thủ gửi đề nghị hòa cờ.'}</p>
+            <div className="actions centered">
+              {showUndo
+                ? <><button onClick={() => socket?.emit('undo:accept')}>Đồng ý</button><button className="secondary" onClick={() => socket?.emit('undo:reject')}>Từ chối</button></>
+                : <><button onClick={() => socket?.emit('draw:accept')}>Đồng ý</button><button className="secondary" onClick={() => socket?.emit('draw:reject')}>Từ chối</button></>}
+            </div>
+          </div>
+        </div>}
 
         {game.status === 'waiting' && <div className="ready-overlay">
           <div className="ready-overlay-card">

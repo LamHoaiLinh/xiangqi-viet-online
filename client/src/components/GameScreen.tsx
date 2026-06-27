@@ -43,8 +43,6 @@ export default function GameScreen({ socket, room, role, playerId, onLeave }: { 
           <button className="secondary" onClick={() => setShowHelp(true)}>Hướng dẫn</button>
           {room.game.status === 'ended' && <><button onClick={() => socket?.emit('game:newRequest')}>Chơi tiếp</button>{room.archivedGameId && <button className="secondary" onClick={() => socket?.emit('archive:star', { id: room.archivedGameId, starred: true })}>★ Ưu tiên lưu ván này</button>}</>}
         </div>
-        {room.pendingUndo && isPlayer && room.pendingUndo.by !== role && <div className="request card"><b>Đối thủ muốn hoàn lại nước vừa đi.</b><button onClick={() => socket?.emit('undo:accept')}>Đồng ý</button><button className="secondary" onClick={() => socket?.emit('undo:reject')}>Từ chối</button></div>}
-        {room.pendingDraw && isPlayer && room.pendingDraw.by !== role && <div className="request card"><b>Đối thủ xin hòa.</b><button onClick={() => socket?.emit('draw:accept')}>Đồng ý</button><button className="secondary" onClick={() => socket?.emit('draw:reject')}>Từ chối</button></div>}
         {showTheme && <ThemeCustomizer theme={theme} onChange={updateTheme}/>} 
       </section>
       <aside>
