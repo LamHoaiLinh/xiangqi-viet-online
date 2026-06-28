@@ -8,7 +8,9 @@ import { darkSwapLabel, DarkSwapMode, GameMode } from '../../../shared/gameTypes
 const swapOptions: Array<{ value: DarkSwapMode; label: string }> = [
   { value: 'none', label: darkSwapLabel.none },
   { value: 'horse_advisor', label: darkSwapLabel.horse_advisor },
-  { value: 'cannon_elephant', label: darkSwapLabel.cannon_elephant }
+  { value: 'cannon_elephant', label: darkSwapLabel.cannon_elephant },
+  { value: 'rook_advisor', label: darkSwapLabel.rook_advisor },
+  { value: 'rook_horse', label: darkSwapLabel.rook_horse }
 ];
 
 export default function RoomCreateModal({ socket, playerId, onClose }: { socket: Socket | null; playerId: string; onClose: () => void }) {

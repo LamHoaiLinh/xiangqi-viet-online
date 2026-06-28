@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Piece as PieceModel, Position } from '../../../shared/gameTypes';
-import { getLegalMoves, pieceAt } from '../../../shared/xiangqiRules';
+import { Piece as PieceModel, Position, opposite } from '../../../shared/gameTypes';
+import { getLegalMoves, isSquareAttacked, pieceAt } from '../../../shared/xiangqiRules';
 import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
@@ -37,7 +37,8 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
       socket?.emit('game:move', { from: selected, to: pos });
       return;
     }
-    if (p && canMove && p.color === role && game.turn === role && game.status === 'playing') {
+    const canSelectPiece = room.settings?.playMode === 'shared' ? p?.color === game.turn : p?.color === role;
+    if (p && canMove && canSelectPiece && game.status === 'playing') {
       setSelected(pos);
       return;
     }
@@ -59,6 +60,19 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c) }} />);
   const showUndo = room.pendingUndo && canMove && room.pendingUndo.by !== role;
   const showDraw = room.pendingDraw && canMove && room.pendingDraw.by !== role;
+  const hintColor = room.settings?.playMode === 'shared' ? game.turn : role;
+  const canSeeCaptureHints = canMove && game.status === 'playing' && (room.settings?.playMode === 'shared' || game.turn === role);
+  const capturableIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!canSeeCaptureHints || (hintColor !== 'red' && hintColor !== 'black')) return ids;
+    for (const p of game.pieces.filter((x: PieceModel) => x.color === hintColor)) {
+      for (const to of getLegalMoves(game, p)) {
+        const target = pieceAt(game, to);
+        if (target && target.color === opposite(hintColor) && !isSquareAttacked(game, to, target.color)) ids.add(target.id);
+      }
+    }
+    return ids;
+  }, [game, canSeeCaptureHints, hintColor]);
 
   return <div className="board-shell" style={style}>
     <div className="board-inner">
@@ -86,7 +100,7 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
           const isSelected = same(selected, { row: p.row, col: p.col });
           return <div
             key={p.id}
-            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''}`}
+            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''} ${capturableIds.has(p.id) ? 'capture-hint' : ''}`}
             style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >
@@ -113,7 +127,7 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
               <span>Đen: {room.black?.name || 'trống'} {room.black?.ready ? '✅' : '⏳'}</span>
             </div>
             {canMove
-              ? <button className="ready-btn" onClick={() => socket?.emit('game:ready', { ready: !seat?.ready })}>{seat?.ready ? 'Hủy sẵn sàng' : 'Sẵn sàng'}</button>
+              ? <div className="ready-actions"><button className="ready-btn" onClick={() => socket?.emit('game:ready', { ready: !seat?.ready })}>{seat?.ready ? 'Hủy sẵn sàng' : 'Sẵn sàng'}</button><button className="secondary" onClick={() => socket?.emit('game:startShared')}>Tự chơi 2 người</button><button className="secondary" onClick={() => socket?.emit('game:startAi')}>Chơi thử với máy</button></div>
               : <div className="ready-wait-text">Chờ hai người chơi bấm Sẵn sàng</div>}
           </div>
         </div>}
