@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Piece as PieceModel, Position, opposite } from '../../../shared/gameTypes';
-import { getLegalMoves, isSquareAttacked, pieceAt } from '../../../shared/xiangqiRules';
+import { getLegalMoves, isSquareAttacked, isSwapAffected, pieceAt } from '../../../shared/xiangqiRules';
 import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
@@ -98,9 +98,10 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
         {game.pieces.map((p: PieceModel) => {
           const display = toDisplay({ row: p.row, col: p.col });
           const isSelected = same(selected, { row: p.row, col: p.col });
+          const swapped = isSwapAffected(game, p);
           return <div
             key={p.id}
-            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''} ${capturableIds.has(p.id) ? 'capture-hint' : ''}`}
+            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''} ${capturableIds.has(p.id) ? 'capture-hint' : ''} ${swapped ? 'piece-swap-marker' : ''}`}
             style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >

@@ -20,6 +20,7 @@ export default function GameScreen({ socket, room, role, playerId, onLeave }: { 
   const copy = () => navigator.clipboard?.writeText(share);
   const updateTheme = (t: any) => socket?.emit('room:updateSettings', { theme: t });
   const score = room.score || { redWins: 0, blackWins: 0, draws: 0, games: 0 };
+  const isShared = room.settings?.playMode === 'shared';
 
   return <main className="game-screen">
     <header className="game-header">
@@ -38,7 +39,7 @@ export default function GameScreen({ socket, room, role, playerId, onLeave }: { 
         <MobileGameLayout room={room} role={role} socket={socket} theme={theme}/>
         <CapturedPieces captured={room.game.captured} role={role} settings={room.settings} theme={theme}/>
         <div className="actions game-actions">
-          {isPlayer && <><button onClick={() => socket?.emit('undo:request')}>Xin hoàn cờ</button><button onClick={() => socket?.emit('draw:request')}>Xin hòa</button><button className="danger-btn" onClick={() => confirm('Bạn chắc chắn đầu hàng?') && socket?.emit('resign:confirm')}>Đầu hàng</button></>}
+          {isPlayer && <><button onClick={() => socket?.emit('undo:request')}>{isShared ? 'Lùi nước' : 'Xin hoàn cờ'}</button><button onClick={() => socket?.emit('draw:request')}>{isShared ? 'Kết thúc hòa' : 'Xin hòa'}</button><button className="danger-btn" onClick={() => confirm('Bạn chắc chắn đầu hàng?') && socket?.emit('resign:confirm')}>Đầu hàng</button></>}
           <button className="secondary" onClick={() => setShowTheme(!showTheme)}>Tùy chỉnh</button>
           <button className="secondary" onClick={() => setShowHelp(true)}>Hướng dẫn</button>
           {room.game.status === 'ended' && <><button onClick={() => socket?.emit('game:newRequest')}>Chơi tiếp</button>{room.archivedGameId && <button className="secondary" onClick={() => socket?.emit('archive:star', { id: room.archivedGameId, starred: true })}>★ Ưu tiên lưu ván này</button>}</>}

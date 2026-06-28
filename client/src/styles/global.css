@@ -273,3 +273,9 @@ label { display: grid; gap: 6px; font-weight: 700; }
   .piece-text-han { font-size: clamp(30px, 8.2vw, 50px) !important; }
   .piece-text-vi { font-size: clamp(20px, 6vw, 34px) !important; }
 }
+
+/* Highlight quân Cờ Úp có chức năng kép: Mã+Sĩ, Pháo+Tượng, Xe+Sĩ, Xe+Mã */
+.piece.piece-swap-marker { z-index: 7; }
+.piece.piece-swap-marker::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid #ffe066; box-shadow: 0 0 0 2px rgba(255,255,255,.65), 0 0 18px rgba(255,190,0,.95), 0 0 28px rgba(255,140,0,.55); pointer-events: none; animation: swapGlowPulse 1.45s ease-in-out infinite; }
+.piece-swap-glow { box-shadow: 0 0 0 3px #ffe066, 0 0 18px #ffbb00, 0 5px 12px #0004; position: relative; }
+@keyframes swapGlowPulse { 0%,100% { transform: scale(1); opacity: .82; } 50% { transform: scale(1.08); opacity: 1; } }
