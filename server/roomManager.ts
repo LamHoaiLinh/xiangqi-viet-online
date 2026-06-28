@@ -14,7 +14,7 @@ export const defaultTimeControl: TimeControl = { mode: 'increment', initialMs: 1
 export const defaultSettings = (partial?: Partial<RoomSettings>): RoomSettings => ({
   allowSpectators: true, spectatorChatEnabled: true, spectatorReactionsEnabled: true, isPublic: true, locked: false, pauseOnDisconnect: false,
   timeControl: defaultTimeControl, theme: defaultTheme, gameMode: 'xiangqi', darkOptions: defaultDarkOptions,
-  revealCapturedHiddenToAll: false, revealCapturedHiddenToOwner: true, ...partial
+  revealCapturedHiddenToAll: false, revealCapturedHiddenToOwner: true, playMode: 'online', aiColor: null, ...partial
 });
 
 function rid() { return Math.random().toString(36).slice(2, 8).toUpperCase(); }
@@ -93,7 +93,7 @@ export function cleanupRoomIfNeeded(room: Room, forceDisconnectedExpired = false
       if (seat && !seat.connected && t - seat.joinedAt > RECONNECT_GRACE_MS) delete room[color];
     }
   }
-  if (!room.red && !room.black) { rooms.delete(room.id); return true; }
+  if ((!room.red || room.red.virtual) && (!room.black || room.black.virtual)) { rooms.delete(room.id); return true; }
   return false;
 }
 
@@ -118,6 +118,45 @@ export function resetNewGameIfBothVote(room: Room, playerId: string) {
   if (room.red && room.black && room.newGameVotes[room.red.playerId] && room.newGameVotes[room.black.playerId]) {
     room.game = resetForNewGame(room.settings.gameMode, room.settings.darkOptions); room.clock = createClock(room.settings.timeControl); room.undoStack = []; room.pendingDraw = undefined; room.pendingUndo = undefined; room.newGameVotes = {}; room.archivedGameId = undefined; room.red.ready = false; room.black.ready = false; addSystemChat(room, 'Hai bên đã đồng ý chơi tiếp. Tỷ số bàn được giữ nguyên.');
   }
+}
+
+
+
+function startGame(room: Room, message: string) {
+  room.game.status = 'playing';
+  room.game.turn = 'red';
+  room.game.winner = null;
+  room.game.endReason = null;
+  room.undoStack = [];
+  room.archivedGameId = undefined;
+  room.clock = createClock(room.settings.timeControl);
+  startClock(room);
+  addSystemChat(room, message);
+}
+
+export function startSharedGame(room: Room, playerId: string) {
+  const role = roleOf(room, playerId);
+  if (role !== 'red' && role !== 'black') return false;
+  if (!room.red) room.red = { playerId: `shared-red-${room.id}`, name: 'Người chơi Đỏ', connected: true, ready: true, joinedAt: now(), virtual: true };
+  if (!room.black) room.black = { playerId: `shared-black-${room.id}`, name: 'Người chơi Đen', connected: true, ready: true, joinedAt: now(), virtual: true };
+  room.red.ready = true; room.black.ready = true;
+  room.settings.playMode = 'shared';
+  room.settings.aiColor = null;
+  startGame(room, 'Bắt đầu chế độ tự chơi 2 người chung một màn hình.');
+  return true;
+}
+
+export function startAiGame(room: Room, playerId: string) {
+  const role = roleOf(room, playerId);
+  if (role !== 'red' && role !== 'black') return null;
+  const aiColor: Color = opposite(role);
+  if (!room[aiColor] || room[aiColor]?.virtual) room[aiColor] = { playerId: `ai-${aiColor}-${room.id}`, name: 'Máy luyện cờ', connected: true, ready: true, joinedAt: now(), virtual: true };
+  room[role]!.ready = true;
+  room[aiColor]!.ready = true;
+  room.settings.playMode = 'ai';
+  room.settings.aiColor = aiColor;
+  startGame(room, `Bắt đầu chơi thử với máy. Máy cầm ${aiColor === 'red' ? 'Đỏ' : 'Đen'}.`);
+  return aiColor;
 }
 
 export function addSystemChat(room: Room, text: string) { room.chat.push({ id: `${Date.now()}-${Math.random()}`, playerId: 'system', name: 'Hệ thống', role: 'system', text, createdAt: now() }); room.chat = room.chat.slice(-100); }

@@ -3,7 +3,7 @@ export type PieceType = 'general' | 'advisor' | 'elephant' | 'rook' | 'horse' | 
 export type GameStatus = 'waiting' | 'playing' | 'ended';
 export type EndReason = 'checkmate' | 'stalemate' | 'resign' | 'draw' | 'timeout' | 'manual' | 'repetition' | null;
 export type GameMode = 'xiangqi' | 'dark';
-export type DarkSwapMode = 'none' | 'horse_advisor' | 'cannon_elephant';
+export type DarkSwapMode = 'none' | 'horse_advisor' | 'cannon_elephant' | 'rook_advisor' | 'rook_horse';
 
 export interface Position { row: number; col: number }
 export interface DarkOptions { redSwap: DarkSwapMode; blackSwap: DarkSwapMode }
@@ -86,6 +86,8 @@ export const pieceLetterVi: Record<PieceType, string> = {
 
 export const darkSwapLabel: Record<DarkSwapMode, string> = {
   none: 'Không hoán đổi',
-  horse_advisor: 'Mã ⇄ Sĩ',
-  cannon_elephant: 'Pháo ⇄ Tượng'
+  horse_advisor: 'Mã + Sĩ',
+  cannon_elephant: 'Pháo + Tượng',
+  rook_advisor: 'Xe + Sĩ',
+  rook_horse: 'Xe + Mã'
 };

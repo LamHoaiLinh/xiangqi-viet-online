@@ -2,11 +2,12 @@ import { Server, Socket } from 'socket.io';
 import { applyLegalMove, cloneGameState, forceEnd } from '../shared/xiangqiRules.js';
 import { Color, DarkOptions, defaultDarkOptions, GameMode, opposite } from '../shared/gameTypes.js';
 import { afterMoveSwitchClock, cloneClock, materializeClock } from './clockManager.js';
-import { addSystemChat, cleanupRoomIfNeeded, createRoom, drawGame, getRoom, joinRoom, leavePlayer, publicSummaries, resetNewGameIfBothVote, resign, roleOf, sanitizeRoom, setReady, timeoutGame, updateScoreIfNeeded } from './roomManager.js';
+import { addSystemChat, cleanupRoomIfNeeded, createRoom, drawGame, getRoom, joinRoom, leavePlayer, publicSummaries, resetNewGameIfBothVote, resign, roleOf, sanitizeRoom, setReady, startAiGame, startSharedGame, timeoutGame, updateScoreIfNeeded } from './roomManager.js';
 import { cleanChat, cleanDisplayName, validDisplayName, validEmoji } from './moderation.js';
 import { isPerpetualCheckBlocked, isPracticalChaseBlocked } from './repetitionRules.js';
 import { archiveEndedGame, exportArchiveBackup, importArchiveBackup, listArchives, setArchiveStar } from './archiveStore.js';
 import { Room, SeatChoice, TimeControl } from './types.js';
+import { chooseAiMove } from './aiPlayer.js';
 
 function emitRoom(io: Server, room: Room) { io.to(room.id).emit('room:state', sanitizeRoom(room)); io.emit('room:list', publicSummaries()); }
 function finishIfEnded(room: Room): boolean {
@@ -18,6 +19,49 @@ function finishIfEnded(room: Room): boolean {
 }
 function emitError(socket: Socket, message: string) { socket.emit('error:message', message); }
 function getJoinedRoom(socket: Socket): Room | undefined { const id = socket.data.roomId; return id ? getRoom(id) : undefined; }
+
+function applyRoomMove(io: Server, room: Room, actorColor: Color, payload: any): { ok: boolean; reason?: string } {
+  materializeClock(room);
+  if (room.clock.timeoutColor) {
+    timeoutGame(room, room.clock.timeoutColor);
+    if (finishIfEnded(room)) io.emit('archive:list', listArchives());
+    emitRoom(io, room);
+    return { ok: false, reason: 'Đã hết giờ.' };
+  }
+  const beforeGame = cloneGameState(room.game);
+  const beforeClock = cloneClock(room.clock);
+  const res = applyLegalMove(room.game, payload, Date.now());
+  if (!res.ok || !res.nextState) return { ok: false, reason: res.reason || 'Nước đi không hợp lệ.' };
+  room.undoStack.push({ game: beforeGame, clock: beforeClock });
+  room.game = res.nextState;
+  const last = room.game.lastMove;
+  afterMoveSwitchClock(room, actorColor);
+  if (last) {
+    last.redMsBefore = beforeClock.redMs;
+    last.blackMsBefore = beforeClock.blackMs;
+    last.redMsAfter = room.clock.redMs;
+    last.blackMsAfter = room.clock.blackMs;
+    last.incrementMsApplied = room.settings.timeControl.mode === 'increment' ? room.settings.timeControl.incrementMs : 0;
+  }
+  if (isPerpetualCheckBlocked(room)) { room.game = forceEnd(room.game, null, 'repetition'); addSystemChat(room, 'Hệ thống phát hiện chiếu dai/lặp thế ở mức thực dụng. Ván được xử hòa.'); }
+  if (isPracticalChaseBlocked(room)) { addSystemChat(room, 'Cảnh báo: Không được bắt đuổi dai. Bản này xử lý ở mức thực dụng.'); }
+  if (room.game.status === 'ended') { addSystemChat(room, endText(room.game.winner, room.game.endReason)); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); }
+  emitRoom(io, room);
+  return { ok: true };
+}
+
+function scheduleAiMove(io: Server, room: Room, delay = 450) {
+  if (room.settings.playMode !== 'ai' || !room.settings.aiColor || room.game.status !== 'playing') return;
+  if (room.game.turn !== room.settings.aiColor) return;
+  const aiColor = room.settings.aiColor;
+  setTimeout(() => {
+    const fresh = getRoom(room.id);
+    if (!fresh || fresh.settings.playMode !== 'ai' || fresh.settings.aiColor !== aiColor || fresh.game.status !== 'playing' || fresh.game.turn !== aiColor) return;
+    const move = chooseAiMove(fresh.game, aiColor);
+    if (!move) { fresh.game = forceEnd(fresh.game, opposite(aiColor), 'stalemate'); if (finishIfEnded(fresh)) io.emit('archive:list', listArchives()); emitRoom(io, fresh); return; }
+    applyRoomMove(io, fresh, aiColor, move);
+  }, delay);
+}
 
 export function registerSocketHandlers(io: Server) {
   io.on('connection', (socket) => {
@@ -110,25 +154,30 @@ export function registerSocketHandlers(io: Server) {
       emitRoom(io, room);
     });
 
+    socket.on('game:startShared', () => {
+      const room = getJoinedRoom(socket); if (!room) return;
+      if (!startSharedGame(room, socket.data.playerId)) return emitError(socket, 'Chỉ người chơi trong bàn mới được bật tự chơi.');
+      emitRoom(io, room);
+    });
+
+    socket.on('game:startAi', () => {
+      const room = getJoinedRoom(socket); if (!room) return;
+      const aiColor = startAiGame(room, socket.data.playerId);
+      if (!aiColor) return emitError(socket, 'Chỉ người chơi trong bàn mới được bật chơi thử với máy.');
+      emitRoom(io, room);
+      scheduleAiMove(io, room, 650);
+    });
+
     socket.on('game:move', (payload) => {
       const room = getJoinedRoom(socket); if (!room) return;
       const playerId = socket.data.playerId; const role = roleOf(room, playerId);
       if (role !== 'red' && role !== 'black') return emitError(socket, 'Người xem không được đi quân.');
-      if (room.game.turn !== role) return emitError(socket, 'Chưa tới lượt của bạn.');
-      materializeClock(room);
-      if (room.clock.timeoutColor) { timeoutGame(room, room.clock.timeoutColor); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); emitRoom(io, room); return; }
-      const beforeGame = cloneGameState(room.game); const beforeClock = cloneClock(room.clock);
-      const res = applyLegalMove(room.game, payload, Date.now());
-      if (!res.ok || !res.nextState) return socket.emit('game:moveRejected', { reason: res.reason, legalMoves: res.legalMoves });
-      room.undoStack.push({ game: beforeGame, clock: beforeClock });
-      room.game = res.nextState;
-      const last = room.game.lastMove;
-      afterMoveSwitchClock(room, role);
-      if (last) { last.redMsBefore = beforeClock.redMs; last.blackMsBefore = beforeClock.blackMs; last.redMsAfter = room.clock.redMs; last.blackMsAfter = room.clock.blackMs; last.incrementMsApplied = room.settings.timeControl.mode === 'increment' ? room.settings.timeControl.incrementMs : 0; }
-      if (isPerpetualCheckBlocked(room)) { room.game = forceEnd(room.game, null, 'repetition'); addSystemChat(room, 'Hệ thống phát hiện chiếu dai/lặp thế ở mức thực dụng. Ván được xử hòa.'); }
-      if (isPracticalChaseBlocked(room)) { addSystemChat(room, 'Cảnh báo: Không được bắt đuổi dai. Bản này xử lý ở mức thực dụng.'); }
-      if (room.game.status === 'ended') { addSystemChat(room, endText(room.game.winner, room.game.endReason)); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); }
-      emitRoom(io, room);
+      const actorColor = room.game.turn;
+      if (room.settings.playMode === 'ai' && room.settings.aiColor === actorColor) return emitError(socket, 'Đang tới lượt máy.');
+      if (room.settings.playMode !== 'shared' && actorColor !== role) return emitError(socket, 'Chưa tới lượt của bạn.');
+      const result = applyRoomMove(io, room, actorColor, payload);
+      if (!result.ok) return socket.emit('game:moveRejected', { reason: result.reason });
+      scheduleAiMove(io, room, 520 + Math.floor(Math.random() * 520));
     });
 
     socket.on('undo:request', () => {
@@ -198,7 +247,7 @@ function normalizeGameMode(raw: any): GameMode {
   return raw === 'dark' ? 'dark' : 'xiangqi';
 }
 function normalizeDarkOptions(raw: any): DarkOptions {
-  const clean = (v: any) => v === 'horse_advisor' || v === 'cannon_elephant' ? v : 'none';
+  const clean = (v: any) => v === 'horse_advisor' || v === 'cannon_elephant' || v === 'rook_advisor' || v === 'rook_horse' ? v : 'none';
   return { redSwap: clean(raw?.redSwap || defaultDarkOptions.redSwap), blackSwap: clean(raw?.blackSwap || defaultDarkOptions.blackSwap) };
 }
 

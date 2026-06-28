@@ -95,42 +95,59 @@ function addIfFreeOrEnemy(state: GameState, out: Position[], color: Color, pos: 
   if (!target || target.color !== color) out.push(pos);
 }
 
-export function effectivePieceType(state: GameState, piece: Piece): PieceType {
-  if (state.rules?.mode !== 'dark') return piece.type;
-  if (piece.hidden) return piece.moveAs || piece.startType || piece.type;
+export function effectivePieceTypes(state: GameState, piece: Piece): PieceType[] {
+  if (state.rules?.mode !== 'dark') return [piece.type];
+  if (piece.hidden) return [piece.moveAs || piece.startType || piece.type];
   const swap = piece.color === 'red' ? state.rules.darkOptions.redSwap : state.rules.darkOptions.blackSwap;
-  if (swap === 'horse_advisor') {
-    if (piece.type === 'horse') return 'advisor';
-    if (piece.type === 'advisor') return 'horse';
-  }
-  if (swap === 'cannon_elephant') {
-    if (piece.type === 'cannon') return 'elephant';
-    if (piece.type === 'elephant') return 'cannon';
-  }
-  return piece.type;
+  const pairs: Record<string, PieceType[]> = {
+    horse_advisor: ['horse', 'advisor'],
+    cannon_elephant: ['cannon', 'elephant'],
+    rook_advisor: ['rook', 'advisor'],
+    rook_horse: ['rook', 'horse']
+  };
+  const pair = pairs[swap];
+  if (pair && pair.includes(piece.type)) return pair;
+  return [piece.type];
+}
+
+export function effectivePieceType(state: GameState, piece: Piece): PieceType {
+  return effectivePieceTypes(state, piece)[0];
+}
+
+export function effectivePieceLabel(state: GameState, piece: Piece): string {
+  return effectivePieceTypes(state, piece).map(t => pieceLetterVi[t]).join('+');
 }
 
 export function isSwapAffected(state: GameState, piece: Piece): boolean {
   if (state.rules?.mode !== 'dark' || piece.hidden) return false;
-  return effectivePieceType(state, piece) !== piece.type;
+  const types = effectivePieceTypes(state, piece);
+  return types.length > 1 || types[0] !== piece.type;
 }
 
-export function generatePseudoMoves(state: GameState, piece: Piece): Position[] {
+function pushUnique(out: Position[], pos: Position) {
+  if (!out.some(x => x.row === pos.row && x.col === pos.col)) out.push(pos);
+}
+function addIfFreeOrEnemyUnique(state: GameState, out: Position[], color: Color, pos: Position) {
+  if (!isInside(pos)) return;
+  const target = pieceAt(state, pos);
+  if (!target || target.color !== color) pushUnique(out, pos);
+}
+
+function generatePseudoMovesByType(state: GameState, piece: Piece, type: PieceType): Position[] {
   const out: Position[] = [];
-  const type = effectivePieceType(state, piece);
   const darkRevealed = isDarkRevealed(state, piece);
   if (type === 'general') {
     // Tướng/Soái luôn đi 1 ô ngang/dọc trong cung, kể cả Cờ Úp.
     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
       const to = { row: piece.row + dr, col: piece.col + dc };
-      if (inPalace(piece.color, to)) addIfFreeOrEnemy(state, out, piece.color, to);
+      if (inPalace(piece.color, to)) addIfFreeOrEnemyUnique(state, out, piece.color, to);
     });
   }
   if (type === 'advisor') {
     // Cờ Tướng: Sĩ ở trong cung. Cờ Úp sau khi lật: Sĩ được đi chéo 1 ô toàn bàn.
     [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr, dc]) => {
       const to = { row: piece.row + dr, col: piece.col + dc };
-      if ((darkRevealed || inPalace(piece.color, to)) && isInside(to)) addIfFreeOrEnemy(state, out, piece.color, to);
+      if ((darkRevealed || inPalace(piece.color, to)) && isInside(to)) addIfFreeOrEnemyUnique(state, out, piece.color, to);
     });
   }
   if (type === 'elephant') {
@@ -139,18 +156,17 @@ export function generatePseudoMoves(state: GameState, piece: Piece): Position[] 
       const eye = { row: piece.row + dr / 2, col: piece.col + dc / 2 };
       const to = { row: piece.row + dr, col: piece.col + dc };
       const legalSide = darkRevealed || (piece.color === 'red' ? to.row >= 5 : to.row <= 4);
-      if (isInside(to) && legalSide && !pieceAt(state, eye)) addIfFreeOrEnemy(state, out, piece.color, to);
+      if (isInside(to) && legalSide && !pieceAt(state, eye)) addIfFreeOrEnemyUnique(state, out, piece.color, to);
     });
   }
   if (type === 'horse') {
-    // Mã đi chữ nhật. Nếu ô chân Mã bị chặn thì không được đi hướng đó.
     const moves = [
       { dr: -2, dc: -1, leg: { row: piece.row - 1, col: piece.col } }, { dr: -2, dc: 1, leg: { row: piece.row - 1, col: piece.col } },
       { dr: 2, dc: -1, leg: { row: piece.row + 1, col: piece.col } }, { dr: 2, dc: 1, leg: { row: piece.row + 1, col: piece.col } },
       { dr: -1, dc: -2, leg: { row: piece.row, col: piece.col - 1 } }, { dr: 1, dc: -2, leg: { row: piece.row, col: piece.col - 1 } },
       { dr: -1, dc: 2, leg: { row: piece.row, col: piece.col + 1 } }, { dr: 1, dc: 2, leg: { row: piece.row, col: piece.col + 1 } }
     ];
-    moves.forEach(m => { if (!pieceAt(state, m.leg)) addIfFreeOrEnemy(state, out, piece.color, { row: piece.row + m.dr, col: piece.col + m.dc }); });
+    moves.forEach(m => { if (!pieceAt(state, m.leg)) addIfFreeOrEnemyUnique(state, out, piece.color, { row: piece.row + m.dr, col: piece.col + m.dc }); });
   }
   if (type === 'rook' || type === 'cannon') {
     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr, dc]) => {
@@ -160,23 +176,29 @@ export function generatePseudoMoves(state: GameState, piece: Piece): Position[] 
         if (!isInside(to)) break;
         const target = pieceAt(state, to);
         if (type === 'rook') {
-          if (!target) out.push(to); else { if (target.color !== piece.color) out.push(to); break; }
+          if (!target) pushUnique(out, to); else { if (target.color !== piece.color) pushUnique(out, to); break; }
         } else {
-          // Pháo đi như Xe khi không ăn. Khi ăn phải có đúng 1 quân làm ngòi ở giữa.
-          if (!jumped) { if (!target) out.push(to); else jumped = true; }
-          else if (target) { if (target.color !== piece.color) out.push(to); break; }
+          if (!jumped) { if (!target) pushUnique(out, to); else jumped = true; }
+          else if (target) { if (target.color !== piece.color) pushUnique(out, to); break; }
         }
       }
     });
   }
   if (type === 'pawn') {
-    // Tốt chỉ đi thẳng trước khi qua sông. Sau khi qua sông được đi ngang, không được đi lùi.
     const dir = piece.color === 'red' ? -1 : 1;
-    addIfFreeOrEnemy(state, out, piece.color, { row: piece.row + dir, col: piece.col });
+    addIfFreeOrEnemyUnique(state, out, piece.color, { row: piece.row + dir, col: piece.col });
     if (crossedRiver(piece.color, piece.row)) {
-      addIfFreeOrEnemy(state, out, piece.color, { row: piece.row, col: piece.col - 1 });
-      addIfFreeOrEnemy(state, out, piece.color, { row: piece.row, col: piece.col + 1 });
+      addIfFreeOrEnemyUnique(state, out, piece.color, { row: piece.row, col: piece.col - 1 });
+      addIfFreeOrEnemyUnique(state, out, piece.color, { row: piece.row, col: piece.col + 1 });
     }
+  }
+  return out;
+}
+
+export function generatePseudoMoves(state: GameState, piece: Piece): Position[] {
+  const out: Position[] = [];
+  for (const type of effectivePieceTypes(state, piece)) {
+    generatePseudoMovesByType(state, piece, type).forEach(pos => pushUnique(out, pos));
   }
   return out;
 }
@@ -246,7 +268,8 @@ function makeNotation(state: GameState, before: Piece, moved: Piece, from: Posit
   const color = before.color === 'red' ? 'Đỏ' : 'Đen';
   const shownType = before.hidden ? 'Úp' : pieceLetterVi[before.type];
   const acted = before.hidden && movedAs ? `(${pieceLetterVi[movedAs]})` : '';
-  const swap = !before.hidden && state.rules?.mode === 'dark' && effectivePieceType(state, before) !== before.type ? `→${pieceLetterVi[effectivePieceType(state, before)]}` : '';
+  const combo = !before.hidden && state.rules?.mode === 'dark' && isSwapAffected(state, before) ? `(${effectivePieceLabel(state, before)})` : '';
+  const swap = combo;
   const reveal = revealedType ? ` · lật ${pieceNameVi[revealedType]}` : '';
   return `${color} ${shownType}${acted}${swap}${from.col + 1}${dir}${to.col + 1}${captured ? 'x' : ''}${reveal}`;
 }
