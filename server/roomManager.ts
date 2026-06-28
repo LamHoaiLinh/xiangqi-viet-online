@@ -170,7 +170,7 @@ export function updateScoreIfNeeded(room: Room) {
   room.score.games += 1;
   if (room.game.winner === 'red') room.score.redWins += 1;
   else if (room.game.winner === 'black') room.score.blackWins += 1;
-  else room.score.draws += 1;
+  else if (room.game.endReason !== 'manual') room.score.draws += 1;
 }
 
 function transferOwner(room: Room) { if (room.ownerPlayerId && roleOf(room, room.ownerPlayerId)) return; room.ownerPlayerId = room.red?.playerId || room.black?.playerId || room.spectators[0]?.playerId || room.ownerPlayerId; }

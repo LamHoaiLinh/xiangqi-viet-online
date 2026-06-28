@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { applyLegalMove, cloneGameState, forceEnd } from '../shared/xiangqiRules.js';
 import { Color, DarkOptions, defaultDarkOptions, GameMode, opposite } from '../shared/gameTypes.js';
-import { afterMoveSwitchClock, cloneClock, materializeClock } from './clockManager.js';
+import { afterMoveSwitchClock, cloneClock, materializeClock, stopClock } from './clockManager.js';
 import { addSystemChat, cleanupRoomIfNeeded, createRoom, drawGame, getRoom, joinRoom, leavePlayer, publicSummaries, resetNewGameIfBothVote, resign, roleOf, sanitizeRoom, setReady, startAiGame, startSharedGame, timeoutGame, updateScoreIfNeeded } from './roomManager.js';
 import { cleanChat, cleanDisplayName, validDisplayName, validEmoji } from './moderation.js';
 import { isPerpetualCheckBlocked, isPracticalChaseBlocked } from './repetitionRules.js';
@@ -48,6 +48,18 @@ function applyRoomMove(io: Server, room: Room, actorColor: Color, payload: any):
   if (room.game.status === 'ended') { addSystemChat(room, endText(room.game.winner, room.game.endReason)); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); }
   emitRoom(io, room);
   return { ok: true };
+}
+
+
+function archiveSharedGameIfNeeded(io: Server, room: Room): boolean {
+  if (room.settings.playMode !== 'shared') return false;
+  if (room.game.status !== 'playing') return false;
+  if (room.game.moveHistory.length === 0) return false;
+  room.game = forceEnd(room.game, null, 'manual');
+  stopClock(room);
+  addSystemChat(room, 'Ván tự chơi 2 người được lưu lại khi rời bàn.');
+  if (finishIfEnded(room)) io.emit('archive:list', listArchives());
+  return true;
 }
 
 function scheduleAiMove(io: Server, room: Room, delay = 450) {
@@ -126,6 +138,7 @@ export function registerSocketHandlers(io: Server) {
     socket.on('room:leave', () => {
       const room = getJoinedRoom(socket); const playerId = socket.data.playerId;
       if (!room || !playerId) return;
+      archiveSharedGameIfNeeded(io, room);
       leavePlayer(room, playerId, true); socket.leave(room.id); socket.data.roomId = undefined;
       const deleted = cleanupRoomIfNeeded(room);
       if (deleted) io.to(room.id).emit('room:delete', { roomId: room.id }); else emitRoom(io, room);
@@ -183,6 +196,14 @@ export function registerSocketHandlers(io: Server) {
     socket.on('undo:request', () => {
       const room = getJoinedRoom(socket); if (!room) return;
       const role = roleOf(room, socket.data.playerId); if (role !== 'red' && role !== 'black') return emitError(socket, 'Người xem không được xin hoàn cờ.');
+      if (room.settings.playMode === 'shared') {
+        const snap = room.undoStack.pop();
+        if (!snap) return emitError(socket, 'Không còn nước để lùi.');
+        room.game = snap.game; room.clock = snap.clock; room.pendingUndo = undefined;
+        addSystemChat(room, 'Tự chơi 2 người: đã lùi lại một nước.');
+        emitRoom(io, room);
+        return;
+      }
       const now = Date.now(); if (room.pendingUndo && now - room.pendingUndo.createdAt < 12_000) return emitError(socket, 'Bạn đang xin hoàn cờ quá nhanh.');
       room.pendingUndo = { id: `${now}`, by: role, createdAt: now }; addSystemChat(room, `${role === 'red' ? 'Đỏ' : 'Đen'} xin hoàn lại nước vừa đi.`); emitRoom(io, room);
     });
@@ -197,6 +218,12 @@ export function registerSocketHandlers(io: Server) {
     socket.on('draw:request', () => {
       const room = getJoinedRoom(socket); if (!room) return;
       const role = roleOf(room, socket.data.playerId); if (role !== 'red' && role !== 'black') return emitError(socket, 'Người xem không được xin hòa.');
+      if (room.settings.playMode === 'shared') {
+        drawGame(room);
+        if (finishIfEnded(room)) io.emit('archive:list', listArchives());
+        emitRoom(io, room);
+        return;
+      }
       room.pendingDraw = { id: `${Date.now()}`, by: role, createdAt: Date.now() }; addSystemChat(room, `${role === 'red' ? 'Đỏ' : 'Đen'} xin hòa.`); emitRoom(io, room);
     });
     socket.on('draw:accept', () => { const room = getJoinedRoom(socket); if (!room || !room.pendingDraw) return; const role = roleOf(room, socket.data.playerId); if (role !== opposite(room.pendingDraw.by)) return emitError(socket, 'Chỉ đối thủ mới được đồng ý hòa.'); drawGame(room); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); emitRoom(io, room); });
@@ -222,6 +249,7 @@ export function registerSocketHandlers(io: Server) {
     socket.on('disconnect', () => {
       const room = getJoinedRoom(socket); const playerId = socket.data.playerId;
       if (!room || !playerId) return;
+      archiveSharedGameIfNeeded(io, room);
       leavePlayer(room, playerId, false);
       emitRoom(io, room);
     });
