@@ -252,3 +252,24 @@ label { display: grid; gap: 6px; font-weight: 700; }
   .replay-head { display: grid; }
   .captured-row { align-items: flex-start; }
 }
+
+
+/* FINAL FIX: room pieces - smaller piece, one visible glyph only, larger Han text */
+.piece { width: 11.35% !important; }
+.piece-fallback { font-weight: 500 !important; line-height: .92; overflow: hidden; }
+.piece-asset-only { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+.piece-asset-only .piece-img { opacity: 1 !important; width: 100%; height: 100%; object-fit: contain; filter: saturate(1.05) contrast(1.04); }
+.piece-symbol-overlay, .piece-overlay-letter, .piece-fallback small { display: none !important; }
+.piece-text { padding: 0; text-align: center; font-family: 'Noto Serif CJK SC', 'SimSun', 'KaiTi', 'Times New Roman', serif; }
+.piece-text-han { font-size: clamp(32px, 5.25vw, 56px) !important; font-weight: 500 !important; }
+.piece-text-vi { font-size: clamp(22px, 3.8vw, 38px) !important; font-weight: 650 !important; letter-spacing: -0.06em; }
+.piece-hidden { width: 100%; height: 100%; }
+.captured-piece { width: 28px !important; height: 28px !important; }
+.captured-piece .piece-text-han { font-size: 22px !important; }
+.captured-piece .piece-text-vi { font-size: 14px !important; letter-spacing: -0.08em; }
+.captured-piece .piece-asset-only .piece-img { width: 100%; height: 100%; }
+@media (max-width: 900px) {
+  .piece { width: 12.25% !important; }
+  .piece-text-han { font-size: clamp(30px, 8.2vw, 50px) !important; }
+  .piece-text-vi { font-size: clamp(20px, 6vw, 34px) !important; }
+}

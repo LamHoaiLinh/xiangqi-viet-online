@@ -14,7 +14,7 @@ const swapOptions: Array<{ value: DarkSwapMode; label: string }> = [
 ];
 
 export default function RoomCreateModal({ socket, playerId, onClose }: { socket: Socket | null; playerId: string; onClose: () => void }) {
-  const [name, setName] = useState('Bàn cờ của anh Linh');
+  const [name, setName] = useState('Bàn cờ của tôi');
   const [displayName, setDisplayName] = useState(localStorage.getItem('xiangqi_viet_name') || 'Anh Linh');
   const [side, setSide] = useState('red');
   const [isPublic, setPublic] = useState(true);
