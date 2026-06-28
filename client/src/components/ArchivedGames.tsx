@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import { darkSwapLabel } from '../../../shared/gameTypes';
+import ReplayViewer from './ReplayViewer';
 
 const fmtDate = (ts: number) => new Date(ts).toLocaleString('vi-VN');
 const reasonText: any = { checkmate: 'chiếu bí', stalemate: 'hết nước', resign: 'đầu hàng', draw: 'hòa', timeout: 'rụng kim', repetition: 'lặp thế', manual: 'kết thúc' };
@@ -25,6 +26,7 @@ function downloadJson(data: any) {
 export default function ArchivedGames({ socket, archives }: { socket: Socket | null; archives: any }) {
   const [mode, setMode] = useState<'xiangqi' | 'dark'>('xiangqi');
   const [selected, setSelected] = useState<any | null>(null);
+  const [replay, setReplay] = useState<any | null>(null);
   const [backupMsg, setBackupMsg] = useState('');
   const fileRef = useRef<HTMLInputElement | null>(null);
   const replaceImportRef = useRef(false);
@@ -87,13 +89,18 @@ export default function ArchivedGames({ socket, archives }: { socket: Socket | n
     {backupMsg && <p className="backup-msg">{backupMsg}</p>}
     {list.length === 0 && <p className="muted">Chưa có ván nào được lưu.</p>}
     <div className="archive-list">
-      {list.map((g: any) => <button key={g.id} className="archive-row" onClick={() => setSelected(g)}>
+      {list.map((g: any) => <div key={g.id} className="archive-row" onClick={() => setReplay(g)} role="button" tabIndex={0}>
         <span><b>{g.roomName}</b> · {fmtDate(g.endedAt)}</span>
         <span>{g.redName || 'Đỏ'} vs {g.blackName || 'Đen'} · {result(g)} · {g.moveCount} nước</span>
         {g.mode === 'dark' && <span>Đỏ: {darkSwapLabel[g.darkOptions?.redSwap || 'none']} · Đen: {darkSwapLabel[g.darkOptions?.blackSwap || 'none']}</span>}
-        <span className="archive-star" onClick={(e) => { e.stopPropagation(); socket?.emit('archive:star', { id: g.id, starred: !g.starred }); }}>{g.starred ? '★ Đang ưu tiên' : '☆ Gắn sao'}</span>
-      </button>)}
+        <div className="archive-actions">
+          <button onClick={(e) => { e.stopPropagation(); setReplay(g); }}>Xem lại</button>
+          <button className="secondary" onClick={(e) => { e.stopPropagation(); setSelected(g); }}>Lịch sử chữ</button>
+          <button className="secondary archive-star" onClick={(e) => { e.stopPropagation(); socket?.emit('archive:star', { id: g.id, starred: !g.starred }); }}>{g.starred ? '★ Đang ưu tiên' : '☆ Gắn sao'}</button>
+        </div>
+      </div>)}
     </div>
-    {selected && <div className="modal-backdrop"><div className="modal wide"><h2>{selected.starred ? '★ ' : ''}{selected.roomName}</h2><p>{selected.redName || 'Đỏ'} vs {selected.blackName || 'Đen'} · {result(selected)} · {fmtDate(selected.endedAt)}</p>{selected.mode === 'dark' && <p className="hint">Cờ Úp · Đỏ: {darkSwapLabel[selected.darkOptions?.redSwap || 'none']} · Đen: {darkSwapLabel[selected.darkOptions?.blackSwap || 'none']}</p>}<ol className="replay-list">{selected.moveHistory.map((m: any, i: number) => <li key={m.id || i}>{m.notation}{m.checkColor ? ' + chiếu' : ''}{m.note ? ` · ${m.note}` : ''}</li>)}</ol><div className="actions"><button onClick={() => socket?.emit('archive:star', { id: selected.id, starred: !selected.starred })}>{selected.starred ? 'Bỏ sao' : 'Gắn sao ván này'}</button><button className="secondary" onClick={() => setSelected(null)}>Đóng</button></div></div></div>}
+    {replay && <ReplayViewer record={replay} onClose={() => setReplay(null)}/>}
+    {selected && <div className="modal-backdrop"><div className="modal wide"><h2>{selected.starred ? '★ ' : ''}{selected.roomName}</h2><p>{selected.redName || 'Đỏ'} vs {selected.blackName || 'Đen'} · {result(selected)} · {fmtDate(selected.endedAt)}</p>{selected.mode === 'dark' && <p className="hint">Cờ Úp · Đỏ: {darkSwapLabel[selected.darkOptions?.redSwap || 'none']} · Đen: {darkSwapLabel[selected.darkOptions?.blackSwap || 'none']}</p>}<ol className="replay-list">{selected.moveHistory.map((m: any, i: number) => <li key={m.id || i}>{m.notation}{m.checkColor ? ' + chiếu' : ''}{m.note ? ` · ${m.note}` : ''}</li>)}</ol><div className="actions"><button onClick={() => setReplay(selected)}>Xem lại bàn cờ</button><button onClick={() => socket?.emit('archive:star', { id: selected.id, starred: !selected.starred })}>{selected.starred ? 'Bỏ sao' : 'Gắn sao ván này'}</button><button className="secondary" onClick={() => setSelected(null)}>Đóng</button></div></div></div>}
   </section>;
 }

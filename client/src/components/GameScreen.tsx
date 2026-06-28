@@ -36,7 +36,7 @@ export default function GameScreen({ socket, room, role, playerId, onLeave }: { 
     <div className="game-grid">
       <section>
         <MobileGameLayout room={room} role={role} socket={socket} theme={theme}/>
-        <CapturedPieces captured={room.game.captured} role={role} settings={room.settings}/>
+        <CapturedPieces captured={room.game.captured} role={role} settings={room.settings} theme={theme}/>
         <div className="actions game-actions">
           {isPlayer && <><button onClick={() => socket?.emit('undo:request')}>Xin hoàn cờ</button><button onClick={() => socket?.emit('draw:request')}>Xin hòa</button><button className="danger-btn" onClick={() => confirm('Bạn chắc chắn đầu hàng?') && socket?.emit('resign:confirm')}>Đầu hàng</button></>}
           <button className="secondary" onClick={() => setShowTheme(!showTheme)}>Tùy chỉnh</button>

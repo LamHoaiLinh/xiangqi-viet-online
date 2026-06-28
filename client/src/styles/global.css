@@ -214,3 +214,41 @@ label { display: grid; gap: 6px; font-weight: 700; }
   .music-panel { left: 8px; right: 8px; bottom: 10px; }
   .music-volume { width: 100%; }
 }
+
+/* replay / captured piece upgrades */
+@keyframes checkShakeOnce {
+  0%,100% { transform: translate(-50%, -50%); }
+  8% { transform: translate(calc(-50% - 4px), -50%); }
+  16% { transform: translate(calc(-50% + 4px), -50%); }
+  24% { transform: translate(calc(-50% - 3px), -50%); }
+  32% { transform: translate(calc(-50% + 3px), -50%); }
+  42% { transform: translate(-50%, -50%); }
+}
+.piece.in-check { animation: checkShakeOnce 2s ease-in-out 1 !important; filter: drop-shadow(0 0 10px var(--check)); }
+.piece-symbol-overlay { font-weight: 450 !important; text-shadow: 0 .5px 0 rgba(255,255,255,.6), 0 0 1px rgba(255,255,255,.55) !important; }
+.piece-fallback { font-weight: 600 !important; }
+.piece-img { opacity: .82; }
+.captured { gap: 8px; }
+.captured-row { display: flex; align-items: center; gap: 10px; min-height: 34px; }
+.captured-title { min-width: 78px; font-weight: 800; color: #62452d; }
+.captured-piece-list { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.captured-piece { width: 30px; height: 30px; display: inline-grid; place-items: center; }
+.captured-piece .piece-fallback { border-width: 2px; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,.18); }
+.captured-piece .piece-symbol-overlay { font-size: 18px !important; }
+.captured-piece .piece-overlay-letter { display: none; }
+.captured-empty { color: #7c6349; font-weight: 700; }
+.archive-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.archive-row { cursor: pointer; }
+.replay-modal { width: min(1220px, 96vw); max-width: min(1220px, 96vw) !important; }
+.replay-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.replay-head h2 { margin: 0 0 6px; }
+.replay-head p { margin: 0; }
+.replay-grid { display: grid; grid-template-columns: minmax(320px, 1fr) 330px; gap: 14px; align-items: start; }
+.replay-controls { display: grid; gap: 10px; }
+.replay-controls input[type="range"] { padding: 0; }
+.replay-controls p { margin: 0; }
+@media (max-width: 1000px) {
+  .replay-grid { grid-template-columns: 1fr; }
+  .replay-head { display: grid; }
+  .captured-row { align-items: flex-start; }
+}
