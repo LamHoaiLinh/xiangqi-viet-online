@@ -57,4 +57,8 @@ export interface GameArchiveRecord {
   moveHistory: MoveRecord[];
   scoreAfter: ScoreState;
   starred: boolean;
+  /** Snapshot bàn cờ lúc bắt đầu, dùng để xem lại chính xác, đặc biệt với Cờ Úp. */
+  initialGame?: GameState;
+  /** Theme người chơi đã chọn lúc kết thúc ván, dùng cho giao diện xem lại. */
+  theme?: ThemeSettings;
 }
