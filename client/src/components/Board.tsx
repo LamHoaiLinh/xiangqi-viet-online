@@ -5,14 +5,26 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
-const GRID_LEFT = 6.0;
-const GRID_TOP = 5.2;
-const GRID_WIDTH = 88.0;
-const GRID_HEIGHT = 89.2;
+const GRID_LEFT = 5.5;
+const GRID_TOP = 4.95;
+const GRID_WIDTH = 89.0;
+const GRID_HEIGHT = 90.1;
 const pctX = (col: number) => `${GRID_LEFT + (col / 8) * GRID_WIDTH}%`;
 const pctY = (row: number) => `${GRID_TOP + (row / 9) * GRID_HEIGHT}%`;
 const spanW = (cols: number) => `${(cols / 8) * GRID_WIDTH}%`;
 const spanH = (rows: number) => `${(rows / 9) * GRID_HEIGHT}%`;
+
+function starClasses(col: number) {
+  if (col === 0) return ' left-edge';
+  if (col === 8) return ' right-edge';
+  return '';
+}
+const STAR_POINTS: Position[] = [
+  { row: 2, col: 1 }, { row: 2, col: 7 },
+  { row: 3, col: 0 }, { row: 3, col: 2 }, { row: 3, col: 4 }, { row: 3, col: 6 }, { row: 3, col: 8 },
+  { row: 6, col: 0 }, { row: 6, col: 2 }, { row: 6, col: 4 }, { row: 6, col: 6 }, { row: 6, col: 8 },
+  { row: 7, col: 1 }, { row: 7, col: 7 }
+];
 
 export default function Board({ room, game, role, socket, theme }: { room: any; game: any; role: string | null; socket: any; theme: any }) {
   const [selected, setSelected] = useState<Position | null>(null);
@@ -99,8 +111,10 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
       <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
         <div className="board-surface" />
         <div className="grid-lines">{horizontalLines}{verticalLines}</div>
+        <div className="river-gap" />
         <div className="palace palace-top" style={{ left: pctX(3), top: pctY(0), width: spanW(2), height: spanH(2) }}><span/><span/></div>
         <div className="palace palace-bottom" style={{ left: pctX(3), top: pctY(7), width: spanW(2), height: spanH(2) }}><span/><span/></div>
+        {STAR_POINTS.map((pt, idx) => { const d = toDisplay(pt); return <div key={`star-${idx}`} className={`star-marker${starClasses(d.col)}`} style={{ left: pctX(d.col), top: pctY(d.row) }}><span className="q tl" /><span className="q tr" /><span className="q bl" /><span className="q br" /></div>; })}
 
         {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
           const displayPos = { row: r, col: c };

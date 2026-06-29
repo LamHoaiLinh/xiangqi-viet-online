@@ -540,3 +540,61 @@ label { display: grid; gap: 6px; font-weight: 700; }
 .piece-hidden::before { inset: 10% !important; }
 .piece-hidden::after { inset: 8% 44% 50% 18% !important; }
 .captured-piece .piece-hidden { width: 100% !important; height: 100% !important; margin: 0 !important; }
+
+/* UI ONLY refine: river gap, palace, star points */
+.grid-lines { z-index: 1 !important; }
+.river-gap {
+  position: absolute;
+  left: 5.5%;
+  width: 89%;
+  top: calc(4.95% + (90.1% * 4 / 9) + 1px);
+  height: calc((90.1% / 9) * 0.58);
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, rgba(232,240,236,.82), rgba(216,225,221,.92), rgba(232,240,236,.82));
+  border-top: 1px solid rgba(138,117,80,.18);
+  border-bottom: 1px solid rgba(138,117,80,.18);
+  pointer-events: none;
+  z-index: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(255,255,255,.45);
+}
+.palace {
+  z-index: 2 !important;
+  pointer-events: none;
+}
+.palace span:first-child,
+.palace span:last-child {
+  opacity: 0.95;
+}
+.star-marker {
+  position: absolute;
+  width: 4.7%;
+  height: 4.7%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+}
+.star-marker .q {
+  position: absolute;
+  width: 24%;
+  height: 24%;
+  border-color: color-mix(in srgb, var(--line), #2e1b0b 16%);
+  border-style: solid;
+  opacity: 0.95;
+}
+.star-marker .tl { left: -7%; top: -7%; border-width: 2px 0 0 2px; }
+.star-marker .tr { right: -7%; top: -7%; border-width: 2px 2px 0 0; }
+.star-marker .bl { left: -7%; bottom: -7%; border-width: 0 0 2px 2px; }
+.star-marker .br { right: -7%; bottom: -7%; border-width: 0 2px 2px 0; }
+.star-marker.left-edge .tl,
+.star-marker.left-edge .bl { display: none; }
+.star-marker.right-edge .tr,
+.star-marker.right-edge .br { display: none; }
+@media (max-width: 900px) {
+  .river-gap { height: calc((90.1% / 9) * 0.54); }
+  .star-marker { width: 5.3%; height: 5.3%; }
+  .star-marker .q { width: 23%; height: 23%; }
+  .star-marker .tl { border-width: 1.8px 0 0 1.8px; }
+  .star-marker .tr { border-width: 1.8px 1.8px 0 0; }
+  .star-marker .bl { border-width: 0 0 1.8px 1.8px; }
+  .star-marker .br { border-width: 0 1.8px 1.8px 0; }
+}
