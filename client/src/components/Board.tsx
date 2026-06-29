@@ -85,14 +85,16 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   const endTitle = game.winner ? `${game.winner === 'red' ? 'Đỏ' : 'Đen'} thắng` : 'Ván cờ hòa';
   const endReasonText: Record<string, string> = { checkmate: 'Chiếu bí', stalemate: 'Hết nước đi hợp lệ', resign: 'Đầu hàng', draw: 'Hai bên đồng ý hòa', timeout: 'Rụng kim', repetition: 'Lặp thế/chiếu dai', no_capture_50: '50 nước mỗi bên không ăn quân', manual: 'Kết thúc thủ công' };
 
-  return <div className="board-shell" style={style}>
-    <div className="board-inner">
-      <div className={`board board-${viewerColor}`}>
+  const boardAsset = theme.boardAsset || 'board_classic_ornate.png';
+  const sceneAsset = theme.sceneAsset || 'scene_classic.png';
+
+  return <div className="board-shell scenic-shell" style={{ ...style, backgroundImage: `url(${ASSET}/scenes/${sceneAsset})` }}>
+    <div className="board-inner scenic-inner">
+      <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
         <div className="board-surface" />
         <div className="grid-lines">{horizontalLines}{verticalLines}</div>
         <div className="palace palace-top"><span/><span/></div>
         <div className="palace palace-bottom"><span/><span/></div>
-        <div className="river-label"><b>楚河</b><strong>SỞ HÀ - HÁN GIỚI</strong><b>漢界</b></div>
 
         {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
           const displayPos = { row: r, col: c };
@@ -117,7 +119,7 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
             style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >
-            <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
+            <Piece piece={p} style={'asset'} theme={theme} game={game}/>
           </div>;
         })}
 

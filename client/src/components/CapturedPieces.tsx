@@ -20,7 +20,7 @@ function displayPiece(piece: any, bucket: 'red' | 'black', role: string | null, 
 
 function CapturedRow({ title, pieces, bucket, role, settings, theme }: { title: string; pieces: any[]; bucket: 'red' | 'black'; role: string | null; settings: any; theme: any }) {
   return <div className="captured-row"><span className="captured-title">{title}</span><div className="captured-piece-list">
-    {pieces?.length ? pieces.map((p: any, i: number) => <span key={`${p.id || i}-${i}`} className="captured-piece"><Piece piece={displayPiece(p, bucket, role, settings)} style={theme?.pieceStyle || 'asset'} theme={theme || defaultTheme} game={{ rules: { mode: settings?.gameMode || 'xiangqi', darkOptions: settings?.darkOptions || { redSwap: 'none', blackSwap: 'none' } } }}/></span>) : <span className="captured-empty">—</span>}
+    {pieces?.length ? pieces.map((p: any, i: number) => <span key={`${p.id || i}-${i}`} className="captured-piece"><Piece piece={displayPiece(p, bucket, role, settings)} style={'asset'} theme={theme || defaultTheme} game={{ rules: { mode: settings?.gameMode || 'xiangqi', darkOptions: settings?.darkOptions || { redSwap: 'none', blackSwap: 'none' } } }}/></span>) : <span className="captured-empty">—</span>}
   </div></div>;
 }
 
