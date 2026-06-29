@@ -229,7 +229,18 @@ export function registerSocketHandlers(io: Server) {
     socket.on('draw:accept', () => { const room = getJoinedRoom(socket); if (!room || !room.pendingDraw) return; const role = roleOf(room, socket.data.playerId); if (role !== opposite(room.pendingDraw.by)) return emitError(socket, 'Chỉ đối thủ mới được đồng ý hòa.'); drawGame(room); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); emitRoom(io, room); });
     socket.on('draw:reject', () => { const room = getJoinedRoom(socket); if (!room) return; room.pendingDraw = undefined; addSystemChat(room, 'Yêu cầu hòa đã bị từ chối.'); emitRoom(io, room); });
     socket.on('resign:confirm', () => { const room = getJoinedRoom(socket); if (!room) return; const role = roleOf(room, socket.data.playerId); if (role !== 'red' && role !== 'black') return emitError(socket, 'Người xem không được đầu hàng.'); resign(room, role); if (finishIfEnded(room)) io.emit('archive:list', listArchives()); emitRoom(io, room); });
-    socket.on('game:newRequest', () => { const room = getJoinedRoom(socket); if (!room) return; resetNewGameIfBothVote(room, socket.data.playerId); emitRoom(io, room); });
+    socket.on('game:newRequest', () => {
+      const room = getJoinedRoom(socket); if (!room) return;
+      if (room.settings.playMode === 'ai') {
+        const aiColor = startAiGame(room, socket.data.playerId);
+        if (!aiColor) return emitError(socket, 'Chỉ người chơi trong bàn mới được chơi tiếp với máy.');
+        emitRoom(io, room);
+        scheduleAiMove(io, room, 650);
+        return;
+      }
+      resetNewGameIfBothVote(room, socket.data.playerId);
+      emitRoom(io, room);
+    });
 
     socket.on('chat:send', (payload) => {
       const room = getJoinedRoom(socket); if (!room) return; const role = roleOf(room, socket.data.playerId); if (!role) return;

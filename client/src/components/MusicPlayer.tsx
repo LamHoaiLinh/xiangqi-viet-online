@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 
 const MUSIC_SRC = '/assets/sounds/Nhacnen.m4a';
+const DEFAULT_VOLUME = 0.35;
 
 export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [on, setOn] = useState(() => {
-    const saved = localStorage.getItem('xiangqi_music_on');
-    return saved === null ? true : saved === '1';
+  // Mặc định mỗi lần mở game là bật nhạc. Trình duyệt có thể chặn đến khi người dùng chạm/click lần đầu.
+  const [on, setOn] = useState(true);
+  const [volume, setVolume] = useState(() => {
+    const raw = Number(localStorage.getItem('xiangqi_music_volume'));
+    return Number.isFinite(raw) ? Math.min(1, Math.max(0, raw)) : DEFAULT_VOLUME;
   });
-  const [volume, setVolume] = useState(() => Number(localStorage.getItem('xiangqi_music_volume') || '0.35'));
   const [expanded, setExpanded] = useState(false);
   const [missing, setMissing] = useState(false);
 
@@ -20,34 +22,58 @@ export default function MusicPlayer() {
       audio.addEventListener('error', () => setMissing(true));
       audioRef.current = audio;
     }
-    audioRef.current.volume = Math.min(1, Math.max(0, volume));
-    localStorage.setItem('xiangqi_music_volume', String(volume));
-  }, [volume]);
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const safeVolume = Math.min(1, Math.max(0, volume));
+    audio.volume = safeVolume;
+    audio.muted = safeVolume <= 0.001;
+    localStorage.setItem('xiangqi_music_volume', String(safeVolume));
+
+    if (!on || safeVolume <= 0.001) {
+      audio.pause();
+      return;
+    }
+    audio.play().catch(() => {});
+  }, [volume, on]);
 
   useEffect(() => {
     const tryPlay = () => {
-      if (!audioRef.current || !on) return;
-      audioRef.current.play().catch(() => {});
+      const audio = audioRef.current;
+      if (!audio || !on || volume <= 0.001) return;
+      audio.muted = false;
+      audio.volume = Math.min(1, Math.max(0, volume));
+      audio.play().catch(() => {});
     };
-    if (on) tryPlay(); else audioRef.current?.pause();
-    const resumeOnGesture = () => { if (on) tryPlay(); };
-    window.addEventListener('pointerdown', resumeOnGesture, { passive: true });
-    window.addEventListener('keydown', resumeOnGesture);
-    window.addEventListener('touchstart', resumeOnGesture, { passive: true });
-    localStorage.setItem('xiangqi_music_on', on ? '1' : '0');
+    tryPlay();
+    window.addEventListener('pointerdown', tryPlay, { passive: true });
+    window.addEventListener('keydown', tryPlay);
+    window.addEventListener('touchstart', tryPlay, { passive: true });
     return () => {
-      window.removeEventListener('pointerdown', resumeOnGesture);
-      window.removeEventListener('keydown', resumeOnGesture);
-      window.removeEventListener('touchstart', resumeOnGesture);
+      window.removeEventListener('pointerdown', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
+      window.removeEventListener('touchstart', tryPlay);
     };
-  }, [on]);
+  }, [on, volume]);
+
+  const effectiveOn = on && volume > 0.001;
+  const toggleMusic = () => {
+    setMissing(false);
+    setOn(v => {
+      const next = !v;
+      if (next && volume <= 0.001) setVolume(DEFAULT_VOLUME);
+      return next;
+    });
+  };
 
   return <div className={`music-panel ${expanded ? 'open' : ''}`}>
-    <button className={`music-toggle ${on ? 'on' : ''}`} onClick={() => { setMissing(false); setOn(v => !v); }} title="Nhạc nền">
-      <span>{on ? '♪' : '♫'}</span>
-      <small>{missing ? 'Thiếu Nhacnen.m4a' : on ? 'Đang phát nhạc' : 'Nhạc nền tắt'}</small>
+    <button className={`music-toggle ${effectiveOn ? 'on' : ''}`} onClick={toggleMusic} title="Nhạc nền">
+      <span>{effectiveOn ? '♪' : '♫'}</span>
+      <small>{missing ? 'Thiếu Nhacnen.m4a' : effectiveOn ? 'Đang phát nhạc' : volume <= 0.001 ? 'Nhạc nền 0%' : 'Nhạc nền tắt'}</small>
     </button>
     <button className="music-more secondary" onClick={() => setExpanded(v => !v)}>{expanded ? 'Ẩn' : 'Âm lượng'}</button>
-    {expanded && <label className="music-volume">Âm lượng <input type="range" min="0" max="1" step="0.05" value={volume} onChange={e => setVolume(Number(e.target.value))}/><b>{Math.round(volume * 100)}%</b></label>}
+    {expanded && <label className="music-volume">Âm lượng <input type="range" min="0" max="1" step="0.01" value={volume} onChange={e => setVolume(Number(e.target.value))}/><b>{Math.round(volume * 100)}%</b></label>}
   </div>;
 }
