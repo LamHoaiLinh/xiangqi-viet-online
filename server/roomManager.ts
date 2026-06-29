@@ -113,11 +113,44 @@ export function setReady(room: Room, playerId: string, ready: boolean) {
   }
 }
 
-export function resetNewGameIfBothVote(room: Room, playerId: string) {
+function prepareNewGame(room: Room) {
+  room.game = resetForNewGame(room.settings.gameMode, room.settings.darkOptions);
+  room.clock = createClock(room.settings.timeControl);
+  room.undoStack = [];
+  room.pendingDraw = undefined;
+  room.pendingUndo = undefined;
+  room.newGameVotes = {};
+  room.archivedGameId = undefined;
+}
+
+export function resetNewGameIfBothVote(room: Room, playerId: string): boolean {
+  const role = roleOf(room, playerId);
+  if (role !== 'red' && role !== 'black') return false;
+
+  // Chơi với máy: AI là ghế ảo nên coi như máy luôn đồng ý chơi tiếp.
+  // Không đổi luật chơi, chỉ bỏ bước chờ phiếu đồng ý từ người không thể bấm nút.
+  if (room.settings.playMode === 'ai' && room.settings.aiColor) {
+    prepareNewGame(room);
+    if (room.red) room.red.ready = true;
+    if (room.black) room.black.ready = true;
+    room.game.status = 'playing';
+    room.game.turn = 'red';
+    room.game.winner = null;
+    room.game.endReason = null;
+    startClock(room);
+    addSystemChat(room, 'Người chơi bấm chơi tiếp. Máy tự động đồng ý, ván mới bắt đầu. Đỏ đi trước.');
+    return true;
+  }
+
   room.newGameVotes[playerId] = true;
   if (room.red && room.black && room.newGameVotes[room.red.playerId] && room.newGameVotes[room.black.playerId]) {
-    room.game = resetForNewGame(room.settings.gameMode, room.settings.darkOptions); room.clock = createClock(room.settings.timeControl); room.undoStack = []; room.pendingDraw = undefined; room.pendingUndo = undefined; room.newGameVotes = {}; room.archivedGameId = undefined; room.red.ready = false; room.black.ready = false; addSystemChat(room, 'Hai bên đã đồng ý chơi tiếp. Tỷ số bàn được giữ nguyên.');
+    prepareNewGame(room);
+    room.red.ready = false;
+    room.black.ready = false;
+    addSystemChat(room, 'Hai bên đã đồng ý chơi tiếp. Tỷ số bàn được giữ nguyên.');
+    return true;
   }
+  return false;
 }
 
 
