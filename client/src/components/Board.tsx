@@ -5,10 +5,10 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
-const GRID_LEFT = 5.45;
-const GRID_TOP = 4.9;
-const GRID_WIDTH = 89.45;
-const GRID_HEIGHT = 90.6;
+const GRID_LEFT = 5.15;
+const GRID_TOP = 4.7;
+const GRID_WIDTH = 90.15;
+const GRID_HEIGHT = 91.0;
 const pctX = (col: number) => `${GRID_LEFT + (col / 8) * GRID_WIDTH}%`;
 const pctY = (row: number) => `${GRID_TOP + (row / 9) * GRID_HEIGHT}%`;
 const spanW = (cols: number) => `${(cols / 8) * GRID_WIDTH}%`;
@@ -71,7 +71,11 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
     '--selected': theme.selectedColor || '#f2c94c',
     '--check': theme.checkColor || '#ff4d4f',
     '--redPiece': theme.redPieceColor || '#b51f1f',
-    '--blackPiece': theme.blackPieceColor || '#222222'
+    '--blackPiece': theme.blackPieceColor || '#222222',
+    '--gridLeft': `${GRID_LEFT}%`,
+    '--gridTop': `${GRID_TOP}%`,
+    '--gridWidth': `${GRID_WIDTH}%`,
+    '--gridHeight': `${GRID_HEIGHT}%`
   };
 
   const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r), left: `${GRID_LEFT}%`, width: `${GRID_WIDTH}%` }} />);

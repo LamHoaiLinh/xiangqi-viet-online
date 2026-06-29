@@ -637,3 +637,40 @@ label { display: grid; gap: 6px; font-weight: 700; }
     height: calc((90.6% / 9) * 0.6) !important;
   }
 }
+
+
+/* UI refine v3: khít mép phải/dưới hơn + làm rõ 2 đường chéo cung tướng */
+.grid-lines { inset: 0 !important; z-index: 1 !important; }
+.board-line.h { left: var(--gridLeft) !important; width: var(--gridWidth) !important; height: 2px !important; }
+.board-line.v { top: var(--gridTop) !important; height: var(--gridHeight) !important; width: 2px !important; }
+.river-gap {
+  left: var(--gridLeft) !important;
+  width: var(--gridWidth) !important;
+  top: calc(var(--gridTop) + (var(--gridHeight) * 4 / 9) + 1px) !important;
+  height: calc((var(--gridHeight) / 9) * 0.62) !important;
+}
+.palace {
+  z-index: 3 !important;
+}
+.palace span:first-child,
+.palace span:last-child {
+  opacity: 1 !important;
+  filter: none !important;
+}
+.palace span:first-child {
+  background: linear-gradient(45deg, transparent calc(50% - 1.2px), color-mix(in srgb, var(--line), #3d2815 12%) 50%, transparent calc(50% + 1.2px)) !important;
+}
+.palace span:last-child {
+  background: linear-gradient(-45deg, transparent calc(50% - 1.2px), color-mix(in srgb, var(--line), #3d2815 12%) 50%, transparent calc(50% + 1.2px)) !important;
+}
+@media (max-width: 900px) {
+  .board-line.h { height: 2px !important; }
+  .board-line.v { width: 2px !important; }
+  .river-gap { height: calc((var(--gridHeight) / 9) * 0.6) !important; }
+  .palace span:first-child {
+    background: linear-gradient(45deg, transparent calc(50% - 1.1px), color-mix(in srgb, var(--line), #3d2815 12%) 50%, transparent calc(50% + 1.1px)) !important;
+  }
+  .palace span:last-child {
+    background: linear-gradient(-45deg, transparent calc(50% - 1.1px), color-mix(in srgb, var(--line), #3d2815 12%) 50%, transparent calc(50% + 1.1px)) !important;
+  }
+}
