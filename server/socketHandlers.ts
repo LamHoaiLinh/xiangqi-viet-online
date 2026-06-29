@@ -285,4 +285,8 @@ function normalizeTimeControl(raw: any): TimeControl {
   const incrementMs = Math.min(120_000, Math.max(0, Number(raw?.incrementMs || 0)));
   return { mode, initialMs, incrementMs: mode === 'increment' ? incrementMs : 0 };
 }
-function endText(winner: Color | null, reason: any) { if (!winner) return 'Ván cờ kết thúc hòa.'; return `${winner === 'red' ? 'Đỏ' : 'Đen'} thắng (${reason || 'kết thúc'}).`; }
+function endText(winner: Color | null, reason: any) {
+  if (reason === 'no_capture_50') return 'Ván cờ tự động hòa: 50 nước mỗi bên không ăn quân.';
+  if (!winner) return 'Ván cờ kết thúc hòa.';
+  return `${winner === 'red' ? 'Đỏ' : 'Đen'} thắng (${reason || 'kết thúc'}).`;
+}

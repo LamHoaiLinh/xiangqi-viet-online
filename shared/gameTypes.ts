@@ -1,7 +1,7 @@
 export type Color = 'red' | 'black';
 export type PieceType = 'general' | 'advisor' | 'elephant' | 'rook' | 'horse' | 'cannon' | 'pawn';
 export type GameStatus = 'waiting' | 'playing' | 'ended';
-export type EndReason = 'checkmate' | 'stalemate' | 'resign' | 'draw' | 'timeout' | 'manual' | 'repetition' | null;
+export type EndReason = 'checkmate' | 'stalemate' | 'resign' | 'draw' | 'timeout' | 'manual' | 'repetition' | 'no_capture_50' | null;
 export type GameMode = 'xiangqi' | 'dark';
 export type DarkSwapMode = 'none' | 'horse_advisor' | 'cannon_elephant' | 'rook_advisor' | 'rook_horse';
 
@@ -37,6 +37,7 @@ export interface MoveRecord {
   blackMsAfter?: number;
   incrementMsApplied?: number;
   note?: string;
+  noCapturePlyAfter?: number;
   revealedType?: PieceType;
   movedAs?: PieceType;
 }
@@ -53,6 +54,8 @@ export interface GameState {
   captured: CapturedState;
   lastMove?: MoveRecord;
   checkColor?: Color | null;
+  /** Số nửa-nước liên tiếp không ăn quân. 100 nửa-nước = 50 nước Đỏ + 50 nước Đen => hòa tự động. */
+  noCapturePly?: number;
   repetition: Record<string, number>;
 }
 

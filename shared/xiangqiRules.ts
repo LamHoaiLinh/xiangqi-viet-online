@@ -10,6 +10,7 @@ export const cloneGameState = (s: GameState): GameState => ({
   captured: { red: s.captured.red.map(clonePiece), black: s.captured.black.map(clonePiece) },
   moveHistory: s.moveHistory.map(cloneMove),
   lastMove: s.lastMove ? cloneMove(s.lastMove) : undefined,
+  noCapturePly: s.noCapturePly || 0,
   repetition: { ...s.repetition }
 });
 
@@ -61,7 +62,7 @@ export function createInitialGameState(mode: GameMode = 'xiangqi', darkOptions?:
       }
     }
   });
-  const state: GameState = { id: gameId(), rules, status: 'waiting', pieces, turn: 'red', winner: null, endReason: null, moveHistory: [], captured: { red: [], black: [] }, repetition: {} };
+  const state: GameState = { id: gameId(), rules, status: 'waiting', pieces, turn: 'red', winner: null, endReason: null, moveHistory: [], captured: { red: [], black: [] }, noCapturePly: 0, repetition: {} };
   state.repetition[boardKey(state)] = 1;
   return state;
 }
@@ -225,6 +226,43 @@ export function isInCheck(state: GameState, color: Color): boolean {
   return isSquareAttacked(state, { row: general.row, col: general.col }, opposite(color));
 }
 
+function pieceAttacksSquareByType(state: GameState, piece: Piece, pos: Position, type: PieceType): boolean {
+  if (!isInside(pos)) return false;
+  const dr = pos.row - piece.row;
+  const dc = pos.col - piece.col;
+  const darkRevealed = isDarkRevealed(state, piece);
+
+  if (type === 'general') return Math.abs(dr) + Math.abs(dc) === 1 && inPalace(piece.color, pos);
+  if (type === 'advisor') return Math.abs(dr) === 1 && Math.abs(dc) === 1 && (darkRevealed || inPalace(piece.color, pos));
+  if (type === 'elephant') {
+    if (Math.abs(dr) !== 2 || Math.abs(dc) !== 2) return false;
+    const legalSide = darkRevealed || (piece.color === 'red' ? pos.row >= 5 : pos.row <= 4);
+    const eye = { row: piece.row + dr / 2, col: piece.col + dc / 2 };
+    return legalSide && !pieceAt(state, eye);
+  }
+  if (type === 'horse') {
+    const adr = Math.abs(dr), adc = Math.abs(dc);
+    if (!((adr === 2 && adc === 1) || (adr === 1 && adc === 2))) return false;
+    const leg = adr === 2 ? { row: piece.row + Math.sign(dr), col: piece.col } : { row: piece.row, col: piece.col + Math.sign(dc) };
+    return !pieceAt(state, leg);
+  }
+  if (type === 'rook') return (dr === 0 || dc === 0) && countBetween(state, piece, pos) === 0;
+  if (type === 'cannon') return (dr === 0 || dc === 0) && countBetween(state, piece, pos) === 1;
+  if (type === 'pawn') {
+    const forward = piece.color === 'red' ? -1 : 1;
+    if (dr === forward && dc === 0) return true;
+    return crossedRiver(piece.color, piece.row) && dr === 0 && Math.abs(dc) === 1;
+  }
+  return false;
+}
+
+export function isPieceDefended(state: GameState, target: Piece): boolean {
+  return state.pieces.some(p => {
+    if (p.id === target.id || p.color !== target.color) return false;
+    return effectivePieceTypes(state, p).some(t => pieceAttacksSquareByType(state, p, { row: target.row, col: target.col }, t));
+  });
+}
+
 function movePieceUnsafe(state: GameState, from: Position, to: Position): { next: GameState; moved?: Piece; captured?: Piece; wasHidden?: boolean; movedAs?: PieceType; revealedType?: PieceType } {
   const next = cloneGameState(state);
   const idx = next.pieces.findIndex(p => p.row === from.row && p.col === from.col);
@@ -284,12 +322,13 @@ export function applyLegalMove(state: GameState, input: MoveInput, now = Date.no
   const { next, moved, captured, movedAs, revealedType } = movePieceUnsafe(state, input.from, input.to);
   if (!moved) return { ok: false, reason: 'Không thể di chuyển quân.' };
   next.turn = opposite(state.turn);
+  next.noCapturePly = captured ? 0 : (state.noCapturePly || 0) + 1;
   if (captured) next.captured[captured.color].push(captured);
   const move: MoveRecord = {
     id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
     from: { ...input.from }, to: { ...input.to }, piece: { ...moved }, captured,
     notation: makeNotation(state, piece, moved, input.from, input.to, captured, revealedType, movedAs), createdAt: now,
-    revealedType, movedAs
+    noCapturePlyAfter: next.noCapturePly, revealedType, movedAs
   };
   const checked = isInCheck(next, next.turn) ? next.turn : null;
   move.checkColor = checked;
@@ -302,6 +341,8 @@ export function applyLegalMove(state: GameState, input: MoveInput, now = Date.no
     next.status = 'ended'; next.winner = piece.color; next.endReason = 'checkmate';
   } else if (!checked && !hasAnyLegalMove(next, next.turn)) {
     next.status = 'ended'; next.winner = null; next.endReason = 'stalemate';
+  } else if ((next.noCapturePly || 0) >= 100) {
+    next.status = 'ended'; next.winner = null; next.endReason = 'no_capture_50';
   } else if (next.repetition[key] >= 6) {
     next.status = 'ended'; next.winner = null; next.endReason = 'repetition';
   }

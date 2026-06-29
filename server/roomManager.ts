@@ -127,6 +127,7 @@ function startGame(room: Room, message: string) {
   room.game.turn = 'red';
   room.game.winner = null;
   room.game.endReason = null;
+  room.game.noCapturePly = 0;
   room.undoStack = [];
   room.archivedGameId = undefined;
   room.clock = createClock(room.settings.timeControl);
