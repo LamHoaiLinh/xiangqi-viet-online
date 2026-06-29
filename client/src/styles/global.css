@@ -529,3 +529,14 @@ label { display: grid; gap: 6px; font-weight: 700; }
 .palace { left: 37.5% !important; width: 25% !important; height: 22.222% !important; }
 .palace-top { top: 0 !important; }
 .palace-bottom { bottom: 0 !important; }
+
+
+/* ALIGN FIX: đưa quân cờ và đường kẻ vào đúng giao điểm, đồng thời giảm cỡ quân úp */
+.board-line.h { left: auto !important; right: auto !important; }
+.board-line.v { top: auto !important; bottom: auto !important; }
+.palace { left: auto !important; top: auto !important; bottom: auto !important; width: auto !important; height: auto !important; }
+.palace span { inset: 0; }
+.piece-hidden { width: 88% !important; height: 88% !important; margin: 6% !important; transform: none !important; box-sizing: border-box; }
+.piece-hidden::before { inset: 10% !important; }
+.piece-hidden::after { inset: 8% 44% 50% 18% !important; }
+.captured-piece .piece-hidden { width: 100% !important; height: 100% !important; margin: 0 !important; }

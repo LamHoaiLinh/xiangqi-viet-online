@@ -5,8 +5,14 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
-const pctX = (col: number) => `${(col / 8) * 100}%`;
-const pctY = (row: number) => `${(row / 9) * 100}%`;
+const GRID_LEFT = 6.0;
+const GRID_TOP = 5.2;
+const GRID_WIDTH = 88.0;
+const GRID_HEIGHT = 89.2;
+const pctX = (col: number) => `${GRID_LEFT + (col / 8) * GRID_WIDTH}%`;
+const pctY = (row: number) => `${GRID_TOP + (row / 9) * GRID_HEIGHT}%`;
+const spanW = (cols: number) => `${(cols / 8) * GRID_WIDTH}%`;
+const spanH = (rows: number) => `${(rows / 9) * GRID_HEIGHT}%`;
 
 export default function Board({ room, game, role, socket, theme }: { room: any; game: any; role: string | null; socket: any; theme: any }) {
   const [selected, setSelected] = useState<Position | null>(null);
@@ -56,8 +62,8 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
     '--blackPiece': theme.blackPieceColor || '#222222'
   };
 
-  const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r) }} />);
-  const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c) }} />);
+  const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r), left: `${GRID_LEFT}%`, width: `${GRID_WIDTH}%` }} />);
+  const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c), top: `${GRID_TOP}%`, height: `${GRID_HEIGHT}%` }} />);
   const showUndo = room.pendingUndo && canMove && room.pendingUndo.by !== role;
   const showDraw = room.pendingDraw && canMove && room.pendingDraw.by !== role;
   const hintColor = room.settings?.playMode === 'shared' ? game.turn : role;
@@ -93,8 +99,8 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
       <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
         <div className="board-surface" />
         <div className="grid-lines">{horizontalLines}{verticalLines}</div>
-        <div className="palace palace-top"><span/><span/></div>
-        <div className="palace palace-bottom"><span/><span/></div>
+        <div className="palace palace-top" style={{ left: pctX(3), top: pctY(0), width: spanW(2), height: spanH(2) }}><span/><span/></div>
+        <div className="palace palace-bottom" style={{ left: pctX(3), top: pctY(7), width: spanW(2), height: spanH(2) }}><span/><span/></div>
 
         {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
           const displayPos = { row: r, col: c };
