@@ -5,48 +5,24 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
-const pctX = (col: number) => `${(col / 8) * 100}%`;
-const pctY = (row: number) => `${(row / 9) * 100}%`;
-const gridX = (col: number) => (col / 8) * 100;
-const gridY = (row: number) => (row / 9) * 100;
-function BoardGuideLines() {
-  const xs = Array.from({ length: 9 }, (_, c) => gridX(c));
-  const ys = Array.from({ length: 10 }, (_, r) => gridY(r));
-  const riverTop = gridY(4);
-  const riverBottom = gridY(5);
-  const palaceLeft = gridX(3);
-  const palaceRight = gridX(5);
-  const topPalaceTop = gridY(0);
-  const topPalaceBottom = gridY(2);
-  const bottomPalaceTop = gridY(7);
-  const bottomPalaceBottom = gridY(9);
+const X_POINTS = [11.94, 21.75, 30.93, 40.46, 49.99, 59.45, 68.89, 78.16, 87.97];
+const Y_POINTS = [11.06, 19.12, 27.32, 35.45, 43.79, 53.85, 62.20, 70.40, 78.60, 87.23];
+const pctX = (col: number) => `${X_POINTS[col] ?? X_POINTS[0]}%`;
+const pctY = (row: number) => `${Y_POINTS[row] ?? Y_POINTS[0]}%`;
+const spanW = (cols: number) => `${((X_POINTS[3 + cols] ?? X_POINTS[X_POINTS.length - 1]) - X_POINTS[3]).toFixed(2)}%`;
+const spanH = (rows: number) => `${((Y_POINTS[7 + rows] ?? Y_POINTS[Y_POINTS.length - 1]) - Y_POINTS[7]).toFixed(2)}%`;
 
-  return <svg className="board-guide-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <g className="board-grid-strokes" vectorEffect="non-scaling-stroke">
-      {ys.map((y, i) => <line key={`h-${i}`} x1="0" y1={y} x2="100" y2={y} />)}
-      {xs.map((x, i) => <line key={`v-${i}`} x1={x} y1="0" x2={x} y2="100" />)}
-    </g>
-    <g className="board-combo-guides" vectorEffect="non-scaling-stroke">
-      <rect x={palaceLeft} y={topPalaceTop} width={palaceRight - palaceLeft} height={topPalaceBottom - topPalaceTop} />
-      <line x1={palaceLeft} y1={topPalaceTop} x2={palaceRight} y2={topPalaceBottom} />
-      <line x1={palaceLeft} y1={topPalaceBottom} x2={palaceRight} y2={topPalaceTop} />
-
-      <rect x={palaceLeft} y={bottomPalaceTop} width={palaceRight - palaceLeft} height={bottomPalaceBottom - bottomPalaceTop} />
-      <line x1={palaceLeft} y1={bottomPalaceTop} x2={palaceRight} y2={bottomPalaceBottom} />
-      <line x1={palaceLeft} y1={bottomPalaceBottom} x2={palaceRight} y2={bottomPalaceTop} />
-
-      <rect x="0" y={riverTop} width="100" height={riverBottom - riverTop} />
-      {Array.from({ length: 8 }, (_, c) => {
-        const left = gridX(c);
-        const right = gridX(c + 1);
-        return <g key={`river-x-${c}`}>
-          <line x1={left} y1={riverTop} x2={right} y2={riverBottom} />
-          <line x1={left} y1={riverBottom} x2={right} y2={riverTop} />
-        </g>;
-      })}
-    </g>
-  </svg>;
+function starClasses(col: number) {
+  if (col === 0) return ' left-edge';
+  if (col === 8) return ' right-edge';
+  return '';
 }
+const STAR_POINTS: Position[] = [
+  { row: 2, col: 1 }, { row: 2, col: 7 },
+  { row: 3, col: 0 }, { row: 3, col: 2 }, { row: 3, col: 4 }, { row: 3, col: 6 }, { row: 3, col: 8 },
+  { row: 6, col: 0 }, { row: 6, col: 2 }, { row: 6, col: 4 }, { row: 6, col: 6 }, { row: 6, col: 8 },
+  { row: 7, col: 1 }, { row: 7, col: 7 }
+];
 
 export default function Board({ room, game, role, socket, theme }: { room: any; game: any; role: string | null; socket: any; theme: any }) {
   const [selected, setSelected] = useState<Position | null>(null);
@@ -93,9 +69,15 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
     '--selected': theme.selectedColor || '#f2c94c',
     '--check': theme.checkColor || '#ff4d4f',
     '--redPiece': theme.redPieceColor || '#b51f1f',
-    '--blackPiece': theme.blackPieceColor || '#222222'
+    '--blackPiece': theme.blackPieceColor || '#222222',
+    '--gridLeft': '11.94%',
+    '--gridTop': '11.06%',
+    '--gridWidth': '76.03%',
+    '--gridHeight': '76.17%'
   };
 
+  const horizontalLines = Array.from({ length: 10 }, (_, r) => <i key={`h-${r}`} className="board-line h" style={{ top: pctY(r), left: '11.94%', width: '76.03%' }} />);
+  const verticalLines = Array.from({ length: 9 }, (_, c) => <i key={`v-${c}`} className="board-line v" style={{ left: pctX(c), top: '11.06%', height: '76.17%' }} />);
   const showUndo = room.pendingUndo && canMove && room.pendingUndo.by !== role;
   const showDraw = room.pendingDraw && canMove && room.pendingDraw.by !== role;
   const hintColor = room.settings?.playMode === 'shared' ? game.turn : role;
@@ -123,12 +105,18 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   const endTitle = game.winner ? `${game.winner === 'red' ? 'Đỏ' : 'Đen'} thắng` : 'Ván cờ hòa';
   const endReasonText: Record<string, string> = { checkmate: 'Chiếu bí', stalemate: 'Hết nước đi hợp lệ', resign: 'Đầu hàng', draw: 'Hai bên đồng ý hòa', timeout: 'Rụng kim', repetition: 'Lặp thế/chiếu dai', no_capture_50: '50 nước mỗi bên không ăn quân', manual: 'Kết thúc thủ công' };
 
-  return <div className="board-shell" style={style}>
-    <div className="board-inner">
-      <div className={`board board-${viewerColor}`}>
+  const boardAsset = theme.boardAsset || 'board_classic_ivory.png';
+  const sceneAsset = theme.sceneAsset || 'scene_blank.png';
+
+  return <div className="board-shell scenic-shell" style={{ ...style, backgroundImage: `url(${ASSET}/scenes/${sceneAsset})` }}>
+    <div className="board-inner scenic-inner">
+      <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
         <div className="board-surface" />
-        <BoardGuideLines />
-        <div className="river-label"><b>楚河</b><strong>SỞ HÀ - HÁN GIỚI</strong><b>漢界</b></div>
+        <div className="grid-lines">{horizontalLines}{verticalLines}</div>
+        <div className="river-gap" />
+        <div className="palace palace-top" style={{ left: pctX(3), top: pctY(0), width: spanW(2), height: spanH(2) }}><span/><span/></div>
+        <div className="palace palace-bottom" style={{ left: pctX(3), top: pctY(7), width: spanW(2), height: spanH(2) }}><span/><span/></div>
+        {STAR_POINTS.map((pt, idx) => { const d = toDisplay(pt); return <div key={`star-${idx}`} className={`star-marker${starClasses(d.col)}`} style={{ left: pctX(d.col), top: pctY(d.row) }}><span className="q tl" /><span className="q tr" /><span className="q bl" /><span className="q br" /></div>; })}
 
         {Array.from({ length: 10 }).map((_, r) => Array.from({ length: 9 }).map((_, c) => {
           const displayPos = { row: r, col: c };
@@ -153,7 +141,7 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
             style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >
-            <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
+            <Piece piece={p} style={'asset'} theme={theme} game={game}/>
           </div>;
         })}
 

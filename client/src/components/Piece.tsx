@@ -21,7 +21,8 @@ export default function Piece({ piece, style, theme, game }: { piece: PieceModel
   const cls = `piece-fallback ${swapped ? 'piece-swap-glow' : ''}`;
 
   if (style === 'asset') {
-    const src = `${ASSET}/pieces/piece_${piece.color}_${piece.type}.png`;
+    const pieceSet = theme?.pieceSet || 'classic';
+    const src = `${ASSET}/pieces/${pieceSet}/piece_${piece.color}_${piece.type}.png`;
     return <span
       className={`${cls} piece-asset-only`}
       title={`${pieceNameVi[piece.type]}${swapTitle}`}

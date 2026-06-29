@@ -78,3 +78,11 @@ File backup giữ cả Cờ Tướng, Cờ Úp, dấu sao ưu tiên, tên bàn, 
 - Node khuyến nghị: `20.18.1`.
 - Build Command: `npm install --include=dev --legacy-peer-deps --no-audit --no-fund && npm run build`.
 - Start Command: `npm start`.
+
+
+## Bản giao diện asset mới
+- Giữ nguyên logic game.
+- Thay toàn bộ bàn cờ cũ bằng 5 bộ asset PNG mới do người dùng cung cấp.
+- Thay quân cờ PNG bằng bộ asset mới do người dùng cung cấp.
+- Căn lại tọa độ quân cờ theo trực tiếp giao điểm của bàn cờ mới.
+- Ẩn toàn bộ lưới/palace/river CSS cũ để chỉ hiển thị đúng hình asset.
