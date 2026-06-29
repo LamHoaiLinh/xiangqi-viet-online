@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Piece as PieceModel, Position, opposite } from '../../../shared/gameTypes';
-import { getLegalMoves, isSquareAttacked, isSwapAffected, pieceAt } from '../../../shared/xiangqiRules';
+import { getLegalMoves, isPieceDefended, isSwapAffected, pieceAt } from '../../../shared/xiangqiRules';
 import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
@@ -68,11 +68,22 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
     for (const p of game.pieces.filter((x: PieceModel) => x.color === hintColor)) {
       for (const to of getLegalMoves(game, p)) {
         const target = pieceAt(game, to);
-        if (target && target.color === opposite(hintColor) && !isSquareAttacked(game, to, target.color)) ids.add(target.id);
+        if (target && target.color === opposite(hintColor) && !isPieceDefended(game, target)) ids.add(target.id);
       }
     }
     return ids;
   }, [game, canSeeCaptureHints, hintColor]);
+
+  const noCapturePly = game.noCapturePly || 0;
+  const drawRemaining = Math.max(0, 100 - noCapturePly);
+  const showNoCaptureWarning = game.status === 'playing' && drawRemaining > 0 && drawRemaining <= 10;
+  const mySeatId = role === 'red' ? room.red?.playerId : role === 'black' ? room.black?.playerId : null;
+  const otherRole = role === 'red' ? 'black' : role === 'black' ? 'red' : null;
+  const otherSeatId = otherRole ? room[otherRole]?.playerId : null;
+  const newGameVotes = room.newGameVotes || {};
+  const showNewGameRequest = game.status === 'ended' && mySeatId && otherSeatId && newGameVotes[otherSeatId] && !newGameVotes[mySeatId];
+  const endTitle = game.winner ? `${game.winner === 'red' ? 'Đỏ' : 'Đen'} thắng` : 'Ván cờ hòa';
+  const endReasonText: Record<string, string> = { checkmate: 'Chiếu bí', stalemate: 'Hết nước đi hợp lệ', resign: 'Đầu hàng', draw: 'Hai bên đồng ý hòa', timeout: 'Rụng kim', repetition: 'Lặp thế/chiếu dai', no_capture_50: '50 nước mỗi bên không ăn quân', manual: 'Kết thúc thủ công' };
 
   return <div className="board-shell" style={style}>
     <div className="board-inner">
@@ -99,15 +110,34 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
           const display = toDisplay({ row: p.row, col: p.col });
           const isSelected = same(selected, { row: p.row, col: p.col });
           const swapped = isSwapAffected(game, p);
+          const justRevealed = !!game.lastMove?.revealedType && game.lastMove?.piece?.id === p.id;
           return <div
             key={p.id}
-            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''} ${capturableIds.has(p.id) ? 'capture-hint' : ''} ${swapped ? 'piece-swap-marker' : ''}`}
+            className={`piece ${game.checkColor === p.color && p.type === 'general' ? 'in-check' : ''} ${isSelected ? 'piece-lifted' : ''} ${capturableIds.has(p.id) ? 'capture-hint' : ''} ${swapped ? 'piece-swap-marker' : ''} ${justRevealed ? 'piece-reveal-flip' : ''}`}
             style={{ left: pctX(display.col), top: pctY(display.row) }}
             onClick={() => onPoint(display)}
           >
             <Piece piece={p} style={theme.pieceStyle || 'asset'} theme={theme} game={game}/>
           </div>;
         })}
+
+        {showNoCaptureWarning && <div className="draw-countdown">Còn {drawRemaining} nước không ăn quân sẽ tự động hòa</div>}
+
+        {game.status === 'ended' && <div className="end-overlay">
+          <div className="end-overlay-card">
+            <h2>{endTitle}</h2>
+            <p>{endReasonText[game.endReason || ''] || 'Ván cờ đã kết thúc.'}</p>
+            {canMove && <button onClick={() => socket?.emit('game:newRequest')}>Chơi tiếp</button>}
+          </div>
+        </div>}
+
+        {showNewGameRequest && <div className="request-overlay">
+          <div className="request-overlay-card">
+            <h3>Đối thủ muốn chơi tiếp</h3>
+            <p>Đối thủ muốn chơi tiếp, bạn sẵn sàng chứ?</p>
+            <div className="actions centered"><button onClick={() => socket?.emit('game:newRequest')}>Sẵn sàng chơi tiếp</button></div>
+          </div>
+        </div>}
 
         {(showUndo || showDraw) && <div className="request-overlay">
           <div className="request-overlay-card">

@@ -4,7 +4,7 @@ import { darkSwapLabel } from '../../../shared/gameTypes';
 import ReplayViewer from './ReplayViewer';
 
 const fmtDate = (ts: number) => new Date(ts).toLocaleString('vi-VN');
-const reasonText: any = { checkmate: 'chiếu bí', stalemate: 'hết nước', resign: 'đầu hàng', draw: 'hòa', timeout: 'rụng kim', repetition: 'lặp thế', manual: 'kết thúc' };
+const reasonText: any = { checkmate: 'chiếu bí', stalemate: 'hết nước', resign: 'đầu hàng', draw: 'hòa', timeout: 'rụng kim', repetition: 'lặp thế', no_capture_50: '50 nước không ăn quân', manual: 'kết thúc' };
 function result(g: any) {
   if (!g.winner) return `Hòa${g.endReason ? ' · ' + (reasonText[g.endReason] || g.endReason) : ''}`;
   return `${g.winner === 'red' ? 'Đỏ' : 'Đen'} thắng${g.endReason ? ' · ' + (reasonText[g.endReason] || g.endReason) : ''}`;
