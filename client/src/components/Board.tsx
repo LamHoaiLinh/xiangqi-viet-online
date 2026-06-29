@@ -5,10 +5,10 @@ import Piece from './Piece';
 import { ASSET } from '../utils/constants';
 
 function same(a?: Position | null, b?: Position | null) { return !!a && !!b && a.row === b.row && a.col === b.col; }
-const GRID_LEFT = 5.5;
-const GRID_TOP = 4.95;
-const GRID_WIDTH = 89.0;
-const GRID_HEIGHT = 90.1;
+const GRID_LEFT = 5.45;
+const GRID_TOP = 4.9;
+const GRID_WIDTH = 89.45;
+const GRID_HEIGHT = 90.6;
 const pctX = (col: number) => `${GRID_LEFT + (col / 8) * GRID_WIDTH}%`;
 const pctY = (row: number) => `${GRID_TOP + (row / 9) * GRID_HEIGHT}%`;
 const spanW = (cols: number) => `${(cols / 8) * GRID_WIDTH}%`;

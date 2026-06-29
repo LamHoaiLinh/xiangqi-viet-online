@@ -598,3 +598,42 @@ label { display: grid; gap: 6px; font-weight: 700; }
   .star-marker .bl { border-width: 0 0 1.8px 1.8px; }
   .star-marker .br { border-width: 0 1.8px 1.8px 0; }
 }
+
+
+/* UI refine v2: extend grid to right/bottom a bit, clearer river, uniform line weight */
+.board-line {
+  box-shadow: none !important;
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--line), #3d2815 10%) !important;
+}
+.board-line.h,
+.board-line.v {
+  border-radius: 1px;
+}
+.board-line.h { height: 2px !important; }
+.board-line.v { width: 2px !important; }
+.river-gap {
+  left: 5.45% !important;
+  width: 89.45% !important;
+  top: calc(4.9% + (90.6% * 4 / 9) + 1px) !important;
+  height: calc((90.6% / 9) * 0.62) !important;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--river), white 8%) 0%,
+    color-mix(in srgb, var(--river), white 0%) 50%,
+    color-mix(in srgb, var(--river), white 8%) 100%) !important;
+  border-top: 1px solid color-mix(in srgb, var(--line), white 50%) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--line), white 50%) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(255,255,255,.35) !important;
+  opacity: .98;
+}
+.star-marker .q {
+  border-color: color-mix(in srgb, var(--line), #3d2815 10%) !important;
+  opacity: 1 !important;
+}
+@media (max-width: 900px) {
+  .board-line.h { height: 2px !important; }
+  .board-line.v { width: 2px !important; }
+  .river-gap {
+    height: calc((90.6% / 9) * 0.6) !important;
+  }
+}
