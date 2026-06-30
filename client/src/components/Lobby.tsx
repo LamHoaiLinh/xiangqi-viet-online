@@ -21,7 +21,7 @@ export default function Lobby({ socket, rooms, archives, playerId }: { socket: S
     localStorage.setItem('xiangqi_viet_name', displayName);
     socket?.emit('room:join', { roomId: id, playerId, displayName, password, asSpectator, side: 'auto' });
   };
-  const fmt = (r: any) => r.timeControl?.mode === 'none' ? 'Không giờ' : `${Math.round(r.timeControl.initialMs / 60000)}p${r.timeControl.incrementMs ? ' + ' + r.timeControl.incrementMs / 1000 + 's' : ''}`;
+  const fmt = (r: any) => r.timeControl?.mode === 'none' ? 'Không giờ' : `${Math.round(r.timeControl.initialMs / 60000)}p/ván${r.timeControl.perMoveMs ? ' · ' + Math.round(r.timeControl.perMoveMs / 1000) + 's/nước' : ''}${r.timeControl.incrementMs ? ' · +' + r.timeControl.incrementMs / 1000 + 's' : ''}`;
   const xiangqiRooms = rooms.filter(r => r.gameMode !== 'dark');
   const darkRooms = rooms.filter(r => r.gameMode === 'dark');
 

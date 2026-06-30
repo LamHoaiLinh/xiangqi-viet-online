@@ -17,7 +17,7 @@ export default function MobileGameLayout({ room, role, socket, theme }: { room: 
       <div className="avatar">{opp?.name?.[0] || '?'}</div>
       <div>
         <b>{opp?.name || 'Đối thủ'}</b>
-        <GameClock label="Đồng hồ" ms={oppClockMs} active={oppActive} enabled={room.clock.enabled}/>
+        <GameClock label="Đồng hồ" ms={oppClockMs} active={oppActive} enabled={room.clock.enabled} moveMs={oppActive ? room.clock.moveMs : null}/>
       </div>
     </div>
     <div className="board-zone">
@@ -29,7 +29,7 @@ export default function MobileGameLayout({ room, role, socket, theme }: { room: 
       <div className="avatar me">{me?.name?.[0] || 'B'}</div>
       <div>
         <b>{me?.name || 'Bạn'}</b>
-        <GameClock label="Đồng hồ" ms={myClockMs} active={myActive} enabled={room.clock.enabled}/>
+        <GameClock label="Đồng hồ" ms={myClockMs} active={myActive} enabled={room.clock.enabled} moveMs={myActive ? room.clock.moveMs : null}/>
       </div>
     </div>
   </div>;

@@ -6,9 +6,9 @@ export type TimeMode = 'none' | 'fixed' | 'increment';
 
 export interface PlayerSeat { playerId: string; socketId?: string; name: string; connected: boolean; ready: boolean; joinedAt: number; avatar?: string; virtual?: boolean }
 export interface Spectator { playerId: string; socketId?: string; name: string; connected: boolean; joinedAt: number; avatar?: string }
-export interface TimeControl { mode: TimeMode; initialMs: number; incrementMs: number }
-export interface ClockState { enabled: boolean; redMs: number; blackMs: number; runningColor: Color | null; lastServerTs: number | null; timeoutColor?: Color | null }
-export interface ThemeSettings { theme: 'light' | 'dark'; boardColor: string; lineColor: string; riverColor: string; redPieceColor: string; blackPieceColor: string; highlightColor: string; selectedColor: string; checkColor: string; pieceStyle: 'asset' | 'han' | 'vi' }
+export interface TimeControl { mode: TimeMode; initialMs: number; incrementMs: number; perMoveMs?: number }
+export interface ClockState { enabled: boolean; redMs: number; blackMs: number; runningColor: Color | null; lastServerTs: number | null; timeoutColor?: Color | null; moveMs?: number | null }
+export interface ThemeSettings { theme: 'light' | 'dark'; boardColor: string; lineColor: string; riverColor: string; redPieceColor: string; blackPieceColor: string; highlightColor: string; selectedColor: string; checkColor: string; pieceStyle: 'asset' | 'han' | 'vi'; pieceSet?: string; boardAsset?: string; sceneAsset?: string }
 export type PlayMode = 'online' | 'shared' | 'ai';
 export interface RoomSettings { allowSpectators: boolean; spectatorChatEnabled: boolean; spectatorReactionsEnabled: boolean; isPublic: boolean; locked: boolean; timeControl: TimeControl; theme: ThemeSettings; pauseOnDisconnect: boolean; gameMode: GameMode; darkOptions: DarkOptions; revealCapturedHiddenToAll: boolean; revealCapturedHiddenToOwner: boolean; playMode: PlayMode; aiColor?: Color | null }
 export interface ScoreState { redWins: number; blackWins: number; draws: number; games: number }

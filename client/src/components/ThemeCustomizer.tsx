@@ -2,7 +2,15 @@ import { defaultTheme, themePresets } from '../utils/constants';
 
 const pieceSets = [
   { id: 'classic', name: 'Quân mặc định', hint: 'Bộ quân đang dùng' },
-  { id: 'gold_large', name: 'Quân vàng lớn', hint: 'Bộ quân anh vừa gửi' }
+  { id: 'gold_large', name: 'Quân vàng lớn', hint: 'Bộ quân anh gửi trước' },
+  { id: 'extra_01', name: 'Bộ quân mới 1', hint: 'Từ file asset mới' },
+  { id: 'extra_02', name: 'Bộ quân mới 2', hint: 'Từ file asset mới' },
+  { id: 'extra_03', name: 'Bộ quân mới 3', hint: 'Từ file asset mới' },
+  { id: 'extra_04', name: 'Bộ quân mới 4', hint: 'Từ file asset mới' },
+  { id: 'extra_05', name: 'Bộ quân mới 5', hint: 'Từ file asset mới' },
+  { id: 'extra_06', name: 'Bộ quân mới 6', hint: 'Từ file asset mới' },
+  { id: 'extra_07', name: 'Bộ quân mới 7', hint: 'Từ file asset mới' },
+  { id: 'extra_08', name: 'Bộ quân mới 8', hint: 'Từ file asset mới' },
 ];
 
 export default function ThemeCustomizer({ theme, onChange }: { theme: any; onChange: (t: any) => void }) {

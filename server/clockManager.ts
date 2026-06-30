@@ -1,51 +1,9 @@
 import { opposite } from '../shared/gameTypes.js';
 import { ClockState, Room, TimeControl } from './types.js';
-
-export function createClock(control: TimeControl): ClockState {
-  const enabled = control.mode !== 'none';
-  return { enabled, redMs: control.initialMs, blackMs: control.initialMs, runningColor: null, lastServerTs: null, timeoutColor: null };
-}
-
+export function createClock(control: TimeControl): ClockState { const enabled = control.mode !== 'none'; return { enabled, redMs: control.initialMs, blackMs: control.initialMs, runningColor: null, lastServerTs: null, timeoutColor: null, moveMs: enabled && control.perMoveMs ? control.perMoveMs : null }; }
 export function cloneClock(c: ClockState): ClockState { return { ...c }; }
-
-export function materializeClock(room: Room, now = Date.now()): ClockState {
-  const c = room.clock;
-  if (!c.enabled || room.game.status !== 'playing' || !c.runningColor || !c.lastServerTs) return c;
-  const elapsed = Math.max(0, now - c.lastServerTs);
-  if (elapsed <= 0) return c;
-  if (c.runningColor === 'red') c.redMs = Math.max(0, c.redMs - elapsed); else c.blackMs = Math.max(0, c.blackMs - elapsed);
-  c.lastServerTs = now;
-  if ((c.runningColor === 'red' && c.redMs <= 0) || (c.runningColor === 'black' && c.blackMs <= 0)) c.timeoutColor = c.runningColor;
-  return c;
-}
-
-export function startClock(room: Room, now = Date.now()) {
-  if (!room.clock.enabled) return;
-  room.clock.runningColor = room.game.turn;
-  room.clock.lastServerTs = now;
-}
-
-export function stopClock(room: Room) {
-  materializeClock(room);
-  room.clock.runningColor = null;
-  room.clock.lastServerTs = null;
-}
-
-export function afterMoveSwitchClock(room: Room, movedColor: 'red' | 'black', now = Date.now()) {
-  if (!room.clock.enabled) return;
-  materializeClock(room, now);
-  const inc = room.settings.timeControl.mode === 'increment' ? room.settings.timeControl.incrementMs : 0;
-  if (inc > 0) {
-    if (movedColor === 'red') room.clock.redMs += inc; else room.clock.blackMs += inc;
-  }
-  room.clock.runningColor = opposite(movedColor);
-  room.clock.lastServerTs = now;
-}
-
-export function clockView(room: Room, now = Date.now()): ClockState {
-  const copy = cloneClock(room.clock);
-  if (!copy.enabled || room.game.status !== 'playing' || !copy.runningColor || !copy.lastServerTs) return copy;
-  const elapsed = Math.max(0, now - copy.lastServerTs);
-  if (copy.runningColor === 'red') copy.redMs = Math.max(0, copy.redMs - elapsed); else copy.blackMs = Math.max(0, copy.blackMs - elapsed);
-  return copy;
-}
+export function materializeClock(room: Room, now = Date.now()): ClockState { const c = room.clock; if (!c.enabled || room.game.status !== 'playing' || !c.runningColor || !c.lastServerTs) return c; const elapsed = Math.max(0, now - c.lastServerTs); if (elapsed <= 0) return c; if (c.runningColor === 'red') c.redMs = Math.max(0, c.redMs - elapsed); else c.blackMs = Math.max(0, c.blackMs - elapsed); if ((room.settings.timeControl.perMoveMs || 0) > 0) c.moveMs = Math.max(0, (c.moveMs ?? room.settings.timeControl.perMoveMs ?? 0) - elapsed); c.lastServerTs = now; if ((c.runningColor === 'red' && c.redMs <= 0) || (c.runningColor === 'black' && c.blackMs <= 0) || ((room.settings.timeControl.perMoveMs || 0) > 0 && (c.moveMs || 0) <= 0)) c.timeoutColor = c.runningColor; return c; }
+export function startClock(room: Room, now = Date.now()) { if (!room.clock.enabled) return; room.clock.runningColor = room.game.turn; room.clock.lastServerTs = now; room.clock.moveMs = room.settings.timeControl.perMoveMs || null; }
+export function stopClock(room: Room) { materializeClock(room); room.clock.runningColor = null; room.clock.lastServerTs = null; }
+export function afterMoveSwitchClock(room: Room, movedColor: 'red' | 'black', now = Date.now()) { if (!room.clock.enabled) return; materializeClock(room, now); const inc = room.settings.timeControl.incrementMs || 0; if (inc > 0) { if (movedColor === 'red') room.clock.redMs += inc; else room.clock.blackMs += inc; } room.clock.runningColor = opposite(movedColor); room.clock.lastServerTs = now; room.clock.moveMs = room.settings.timeControl.perMoveMs || null; }
+export function clockView(room: Room, now = Date.now()): ClockState { const copy = cloneClock(room.clock); if (!copy.enabled || room.game.status !== 'playing' || !copy.runningColor || !copy.lastServerTs) return copy; const elapsed = Math.max(0, now - copy.lastServerTs); if (copy.runningColor === 'red') copy.redMs = Math.max(0, copy.redMs - elapsed); else copy.blackMs = Math.max(0, copy.blackMs - elapsed); if ((room.settings.timeControl.perMoveMs || 0) > 0) copy.moveMs = Math.max(0, (copy.moveMs ?? room.settings.timeControl.perMoveMs ?? 0) - elapsed); return copy; }

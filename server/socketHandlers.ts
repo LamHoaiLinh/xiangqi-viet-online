@@ -41,7 +41,7 @@ function applyRoomMove(io: Server, room: Room, actorColor: Color, payload: any):
     last.blackMsBefore = beforeClock.blackMs;
     last.redMsAfter = room.clock.redMs;
     last.blackMsAfter = room.clock.blackMs;
-    last.incrementMsApplied = room.settings.timeControl.mode === 'increment' ? room.settings.timeControl.incrementMs : 0;
+    last.incrementMsApplied = room.settings.timeControl.incrementMs || 0;
   }
   if (isPerpetualCheckBlocked(room)) { room.game = forceEnd(room.game, null, 'repetition'); addSystemChat(room, 'Hệ thống phát hiện chiếu dai/lặp thế ở mức thực dụng. Ván được xử hòa.'); }
   if (isPracticalChaseBlocked(room)) { addSystemChat(room, 'Cảnh báo: Không được bắt đuổi dai. Bản này xử lý ở mức thực dụng.'); }
@@ -291,10 +291,11 @@ function normalizeDarkOptions(raw: any): DarkOptions {
 }
 
 function normalizeTimeControl(raw: any): TimeControl {
-  const mode = raw?.mode === 'none' ? 'none' : raw?.mode === 'fixed' ? 'fixed' : 'increment';
+  const baseMode = raw?.mode === 'none' ? 'none' : 'fixed';
   const initialMs = Math.min(24 * 60 * 60_000, Math.max(30_000, Number(raw?.initialMs || 15 * 60_000)));
-  const incrementMs = Math.min(120_000, Math.max(0, Number(raw?.incrementMs || 0)));
-  return { mode, initialMs, incrementMs: mode === 'increment' ? incrementMs : 0 };
+  const perMoveMs = baseMode === 'none' ? 0 : Math.min(60 * 60_000, Math.max(0, Number(raw?.perMoveMs || 0)));
+  const incrementMs = baseMode === 'none' ? 0 : Math.min(120_000, Math.max(0, Number(raw?.incrementMs || 0)));
+  return { mode: baseMode === 'none' ? 'none' : incrementMs > 0 ? 'increment' : 'fixed', initialMs, perMoveMs, incrementMs };
 }
 function endText(winner: Color | null, reason: any) {
   if (reason === 'no_capture_50') return 'Ván cờ tự động hòa: 50 nước mỗi bên không ăn quân.';

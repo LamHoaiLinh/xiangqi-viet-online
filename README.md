@@ -86,3 +86,11 @@ File backup giữ cả Cờ Tướng, Cờ Úp, dấu sao ưu tiên, tên bàn, 
 - Thay quân cờ PNG bằng bộ asset mới do người dùng cung cấp.
 - Căn lại tọa độ quân cờ theo trực tiếp giao điểm của bàn cờ mới.
 - Ẩn toàn bộ lưới/palace/river CSS cũ để chỉ hiển thị đúng hình asset.
+
+
+## Bản assets + thời gian nâng cấp
+- Giữ nguyên logic game hiện có.
+- Thêm 9 bàn cờ mới và 8 bộ quân mới từ file New asset(1).zip.
+- Thêm đồng hồ theo thời gian mỗi nước đi.
+- Thời gian tích lũy tách riêng bằng checkbox.
+- Cờ Úp hiển thị nhãn Mã+Sĩ / Pháo+Tượng / Xe+Sĩ / Xe+Mã ở góc phía bên tương ứng.

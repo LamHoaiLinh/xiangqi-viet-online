@@ -20,16 +20,21 @@ export const themePresets = [
   { id: 'royal', name: 'Lam hoàng gia', theme: { ...defaultTheme, boardColor: '#163d74', lineColor: '#d5b14c', riverColor: '#214f93', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#4ade80', selectedColor: '#facc15', checkColor: '#ef4444', pieceSet: 'classic', boardAsset: 'board_royal_blue.png', sceneAsset: 'scene_blank.png' } },
   { id: 'wood', name: 'Nâu gỗ', theme: { ...defaultTheme, boardColor: '#4e2d16', lineColor: '#d0a54d', riverColor: '#654122', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#65d38a', selectedColor: '#ffd166', checkColor: '#ef4444', pieceSet: 'classic', boardAsset: 'board_wood_brown.png', sceneAsset: 'scene_blank.png' } },
   { id: 'jade', name: 'Ngọc bích', theme: { ...defaultTheme, boardColor: '#49a99d', lineColor: '#f2cc63', riverColor: '#5ab8ab', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#34d399', selectedColor: '#fde047', checkColor: '#ef4444', pieceSet: 'classic', boardAsset: 'board_jade_green.png', sceneAsset: 'scene_blank.png' } },
-  { id: 'crimson', name: 'Đỏ son', theme: { ...defaultTheme, boardColor: '#b1241d', lineColor: '#f0c35a', riverColor: '#c43a31', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#57d986', selectedColor: '#ffd166', checkColor: '#ff5a5f', pieceSet: 'classic', boardAsset: 'board_crimson_red.png', sceneAsset: 'scene_blank.png' } }
+  { id: 'crimson', name: 'Đỏ son', theme: { ...defaultTheme, boardColor: '#b1241d', lineColor: '#f0c35a', riverColor: '#c43a31', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#57d986', selectedColor: '#ffd166', checkColor: '#ff5a5f', pieceSet: 'classic', boardAsset: 'board_crimson_red.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_01', name: 'Rêu cổ', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_01.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_02', name: 'Gỗ đỏ chạm', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_02.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_03', name: 'Cát ngọc', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_03.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_04', name: 'Đá cổ', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_04.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_05', name: 'Gỗ hoàng kim', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_05.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_06', name: 'Thảm đỏ', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_06.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_07', name: 'Rừng cổ', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_07.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_08', name: 'Ngà trắng', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_08.png', sceneAsset: 'scene_blank.png' } },
+  { id: 'asset_board_09', name: 'Gỗ trầm', theme: { ...defaultTheme, boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#49c277', selectedColor: '#f4d35e', checkColor: '#ff4d4f', pieceSet: 'classic', boardAsset: 'board_extra_09.png', sceneAsset: 'scene_blank.png' } }
 ];
 export const timePresets = [
-  { label: 'Không tính giờ', mode: 'none', initialMs: 15 * 60000, incrementMs: 0 },
-  { label: '3 phút', mode: 'fixed', initialMs: 3 * 60000, incrementMs: 0 },
-  { label: '5 phút', mode: 'fixed', initialMs: 5 * 60000, incrementMs: 0 },
-  { label: '10 phút', mode: 'fixed', initialMs: 10 * 60000, incrementMs: 0 },
-  { label: '15 phút', mode: 'fixed', initialMs: 15 * 60000, incrementMs: 0 },
-  { label: '15 phút + 5 giây', mode: 'increment', initialMs: 15 * 60000, incrementMs: 5000 },
-  { label: '30 phút', mode: 'fixed', initialMs: 30 * 60000, incrementMs: 0 },
-  { label: '30 phút + 10 giây', mode: 'increment', initialMs: 30 * 60000, incrementMs: 10000 },
-  { label: 'Tùy chỉnh', mode: 'custom', initialMs: 15 * 60000, incrementMs: 5_000 }
+  { label: 'Không tính giờ', mode: 'none', initialMs: 15 * 60000, perMoveMs: 0, incrementMs: 0 },
+  { label: '15 phút/ván · 2 phút/nước', mode: 'fixed', initialMs: 15 * 60000, perMoveMs: 2 * 60000, incrementMs: 0 },
+  { label: '10 phút/ván · 1 phút/nước', mode: 'fixed', initialMs: 10 * 60000, perMoveMs: 1 * 60000, incrementMs: 0 },
+  { label: '5 phút/ván · 1 phút/nước', mode: 'fixed', initialMs: 5 * 60000, perMoveMs: 1 * 60000, incrementMs: 0 },
+  { label: 'Tùy chỉnh', mode: 'custom', initialMs: 15 * 60000, perMoveMs: 2 * 60000, incrementMs: 0 }
 ];

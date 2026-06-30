@@ -732,3 +732,16 @@ label { display: grid; gap: 6px; font-weight: 700; }
 }
 .piece-set-card small { color: #7a5b3b; font-weight: 600; }
 .music-volume input[type="range"] { accent-color: #154126; }
+
+
+/* Asset/time upgrade */
+.clock small { display: block; font-size: 12px; font-weight: 800; color: #7a421c; margin-top: 1px; }
+.clock.active small { color: #14532d; }
+.clock.danger small { color: #b91c1c; }
+.dark-swap-corner { position: absolute; z-index: 6; padding: 5px 8px; border-radius: 999px; background: rgba(255,250,240,.92); border: 1px solid #d6aa68; box-shadow: 0 4px 10px rgba(0,0,0,.16); font-weight: 900; font-size: clamp(11px, 1.45vw, 14px); color: #6b3a14; pointer-events: none; }
+.dark-swap-corner.red { color: #9f1239; }
+.dark-swap-corner.black { color: #1f2937; }
+.dark-swap-corner.top-right { top: 8.5%; right: 8.5%; }
+.dark-swap-corner.bottom-left { bottom: 8.5%; left: 8.5%; }
+.time-picker .check { margin: 8px 0; }
+.time-picker h3 { margin: 0 0 8px; }
