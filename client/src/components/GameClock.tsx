@@ -1,2 +1,5 @@
-function fmt(ms: number) { const total = Math.max(0, Math.floor(ms / 1000)); const m = Math.floor(total / 60); const s = total % 60; return `${m}:${s.toString().padStart(2,'0')}`; }
-export default function GameClock({ label, ms, active, enabled, moveMs }: { label: string; ms: number; active: boolean; enabled: boolean; moveMs?: number | null }) { if (!enabled) return <div className="clock off"><span>{label}</span><b>Không tính giờ</b></div>; const total = Math.max(0, Math.floor(ms / 1000)); const moveTotal = Math.max(0, Math.floor((moveMs || 0) / 1000)); return <div className={`clock ${active ? 'active' : ''} ${total <= 10 || (active && moveMs && moveTotal <= 10) ? 'danger' : ''}`}><span>{label}</span><b>{fmt(ms)}</b>{active && moveMs ? <small>Nước: {fmt(moveMs)}</small> : null}</div>; }
+export default function GameClock({ label, ms, active, enabled }: { label: string; ms: number; active: boolean; enabled: boolean }) {
+  if (!enabled) return <div className="clock off"><span>{label}</span><b>Không tính giờ</b></div>;
+  const total = Math.max(0, Math.floor(ms / 1000)); const m = Math.floor(total / 60); const s = total % 60;
+  return <div className={`clock ${active ? 'active' : ''} ${total <= 10 ? 'danger' : ''}`}><span>{label}</span><b>{m}:{s.toString().padStart(2,'0')}</b></div>;
+}

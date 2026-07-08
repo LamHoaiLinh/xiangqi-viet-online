@@ -28,7 +28,16 @@ export default function Piece({ piece, style, theme, game }: { piece: PieceModel
       title={`${pieceNameVi[piece.type]}${swapTitle}`}
       style={{ color: piece.color === 'red' ? theme.redPieceColor : theme.blackPieceColor }}
     >
-      <img className="piece-img" src={src} alt={pieceNameVi[piece.type]} draggable={false} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}/>
+      <img className="piece-img" src={src} alt={pieceNameVi[piece.type]} draggable={false} onError={e => {
+        const img = e.currentTarget as HTMLImageElement;
+        const fallback = `${ASSET}/pieces/classic/piece_${piece.color}_${piece.type}.png`;
+        if (!img.dataset.fallbackTried && img.src.indexOf('/pieces/classic/') < 0) {
+          img.dataset.fallbackTried = '1';
+          img.src = fallback;
+        } else {
+          img.style.display = 'none';
+        }
+      }}/>
     </span>;
   }
 

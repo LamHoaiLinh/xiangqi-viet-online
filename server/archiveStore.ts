@@ -167,7 +167,10 @@ function cleanTheme(raw: any): ThemeSettings | undefined {
     highlightColor: cleanString(raw.highlightColor, 20) || '#48b87a',
     selectedColor: cleanString(raw.selectedColor, 20) || '#f2c94c',
     checkColor: cleanString(raw.checkColor, 20) || '#ff4d4f',
-    pieceStyle: raw.pieceStyle === 'han' || raw.pieceStyle === 'vi' ? raw.pieceStyle : 'asset'
+    pieceStyle: raw.pieceStyle === 'han' || raw.pieceStyle === 'vi' ? raw.pieceStyle : 'asset',
+    pieceSet: cleanString(raw.pieceSet, 50) || 'classic',
+    boardAsset: cleanString(raw.boardAsset, 120) || 'board_classic_ivory.png',
+    sceneAsset: cleanString(raw.sceneAsset, 120) || 'scene_blank.png'
   };
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Socket } from 'socket.io-client';
 import MobileGameLayout from './MobileGameLayout';
 import MoveHistory from './MoveHistory';
@@ -7,18 +7,24 @@ import ChatBox from './ChatBox';
 import ThemeCustomizer from './ThemeCustomizer';
 import HelpModal from './HelpModal';
 import { darkSwapLabel } from '../../../shared/gameTypes';
+import { loadVisualTheme, saveVisualTheme } from '../utils/themeStorage';
 
 export default function GameScreen({ socket, room, role, playerId, onLeave }: { socket: Socket | null; room: any; role: string | null; playerId: string; onLeave: () => void }) {
   const [showTheme, setShowTheme] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const isPlayer = role === 'red' || role === 'black';
   const seat = role === 'red' ? room.red : role === 'black' ? room.black : null;
-  const theme = useMemo(() => room.settings.theme || {}, [room.settings.theme]);
+  const roomTheme = useMemo(() => room.settings.theme || {}, [room.settings.theme]);
+  const [theme, setTheme] = useState<any>(() => loadVisualTheme(roomTheme));
+  useEffect(() => { setTheme(loadVisualTheme(room.settings.theme || {})); }, [room.id]);
   const share = `${location.origin}${location.pathname}?room=${room.id}`;
   const modeText = room.settings.gameMode === 'dark' ? 'Cờ Úp' : 'Cờ Tướng';
   const statusText = room.game.status === 'waiting' ? 'Đang chờ sẵn sàng' : room.game.status === 'playing' ? `Lượt ${room.game.turn === 'red' ? 'Đỏ' : 'Đen'}` : room.game.winner ? `${room.game.winner === 'red' ? 'Đỏ' : 'Đen'} thắng` : 'Hòa';
   const copy = () => navigator.clipboard?.writeText(share);
-  const updateTheme = (t: any) => socket?.emit('room:updateSettings', { theme: t });
+  const updateTheme = (t: any) => {
+    const next = saveVisualTheme(t);
+    setTheme(next);
+  };
   const score = room.score || { redWins: 0, blackWins: 0, draws: 0, games: 0 };
   const isShared = room.settings?.playMode === 'shared';
 

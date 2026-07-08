@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Socket } from 'socket.io-client';
 import TimeControlPicker from './TimeControlPicker';
 import ThemeCustomizer from './ThemeCustomizer';
-import { defaultTheme } from '../utils/constants';
+import { loadVisualTheme, saveVisualTheme } from '../utils/themeStorage';
 import { darkSwapLabel, DarkSwapMode, GameMode } from '../../../shared/gameTypes';
 
 const swapOptions: Array<{ value: DarkSwapMode; label: string }> = [
@@ -25,7 +25,8 @@ export default function RoomCreateModal({ socket, playerId, onClose }: { socket:
   const [revealCapturedHiddenToAll, setRevealCapturedHiddenToAll] = useState(false);
   const [revealCapturedHiddenToOwner, setRevealCapturedHiddenToOwner] = useState(true);
   const [timeControl, setTimeControl] = useState<any>({ mode: 'increment', initialMs: 15 * 60000, incrementMs: 5000 });
-  const [theme, setTheme] = useState<any>(defaultTheme);
+  const [theme, setThemeState] = useState<any>(() => loadVisualTheme());
+  const setTheme = (next: any) => setThemeState(saveVisualTheme(next));
 
   const submit = () => {
     localStorage.setItem('xiangqi_viet_name', displayName);

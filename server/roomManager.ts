@@ -8,9 +8,9 @@ const rooms = new Map<string, Room>();
 export const RECONNECT_GRACE_MS = 120_000;
 
 export const defaultTheme: ThemeSettings = {
-  theme: 'light', boardColor: '#f4d39a', lineColor: '#6d3518', riverColor: '#d9f2ff', redPieceColor: '#b51f1f', blackPieceColor: '#222222', highlightColor: '#48b87a', selectedColor: '#f2c94c', checkColor: '#ff4d4f', pieceStyle: 'asset', pieceSet: 'classic', boardAsset: 'board_classic_ivory.png', sceneAsset: 'scene_blank.png'
+  theme: 'light', boardColor: '#f6ead2', lineColor: '#9a6a2f', riverColor: '#efe4cb', redPieceColor: '#c62828', blackPieceColor: '#222222', highlightColor: '#48b87a', selectedColor: '#f2c94c', checkColor: '#ff4d4f', pieceStyle: 'asset', pieceSet: 'classic', boardAsset: 'board_classic_ivory.png', sceneAsset: 'scene_blank.png'
 };
-export const defaultTimeControl: TimeControl = { mode: 'fixed', initialMs: 15 * 60_000, perMoveMs: 2 * 60_000, incrementMs: 0 };
+export const defaultTimeControl: TimeControl = { mode: 'increment', initialMs: 15 * 60_000, incrementMs: 5_000 };
 export const defaultSettings = (partial?: Partial<RoomSettings>): RoomSettings => ({
   allowSpectators: true, spectatorChatEnabled: true, spectatorReactionsEnabled: true, isPublic: true, locked: false, pauseOnDisconnect: false,
   timeControl: defaultTimeControl, theme: defaultTheme, gameMode: 'xiangqi', darkOptions: defaultDarkOptions,

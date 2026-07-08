@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Piece as PieceModel, Position, opposite, darkSwapLabel } from '../../../shared/gameTypes';
+import { Piece as PieceModel, Position, opposite } from '../../../shared/gameTypes';
 import { getLegalMoves, isPieceDefended, isSwapAffected, pieceAt } from '../../../shared/xiangqiRules';
 import Piece from './Piece';
 import { ASSET } from '../utils/constants';
@@ -102,14 +102,6 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
   const otherSeatId = otherRole ? room[otherRole]?.playerId : null;
   const newGameVotes = room.newGameVotes || {};
   const showNewGameRequest = game.status === 'ended' && mySeatId && otherSeatId && newGameVotes[otherSeatId] && !newGameVotes[mySeatId];
-
-  const redSwap = room.settings?.gameMode === 'dark' ? room.settings?.darkOptions?.redSwap : 'none';
-  const blackSwap = room.settings?.gameMode === 'dark' ? room.settings?.darkOptions?.blackSwap : 'none';
-  const redSwapText = redSwap && redSwap !== 'none' ? darkSwapLabel[redSwap] : '';
-  const blackSwapText = blackSwap && blackSwap !== 'none' ? darkSwapLabel[blackSwap] : '';
-  const redSwapPos = viewerColor === 'red' ? 'bottom-left' : 'top-right';
-  const blackSwapPos = viewerColor === 'red' ? 'top-right' : 'bottom-left';
-
   const endTitle = game.winner ? `${game.winner === 'red' ? 'Đỏ' : 'Đen'} thắng` : 'Ván cờ hòa';
   const endReasonText: Record<string, string> = { checkmate: 'Chiếu bí', stalemate: 'Hết nước đi hợp lệ', resign: 'Đầu hàng', draw: 'Hai bên đồng ý hòa', timeout: 'Rụng kim', repetition: 'Lặp thế/chiếu dai', no_capture_50: '50 nước mỗi bên không ăn quân', manual: 'Kết thúc thủ công' };
 
@@ -120,8 +112,6 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
     <div className="board-inner scenic-inner">
       <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
         <div className="board-surface" />
-        {redSwapText && <div className={`dark-swap-corner ${redSwapPos} red`}>{redSwapText}</div>}
-        {blackSwapText && <div className={`dark-swap-corner ${blackSwapPos} black`}>{blackSwapText}</div>}
         <div className="grid-lines">{horizontalLines}{verticalLines}</div>
         <div className="river-gap" />
         <div className="palace palace-top" style={{ left: pctX(3), top: pctY(0), width: spanW(2), height: spanH(2) }}><span/><span/></div>
