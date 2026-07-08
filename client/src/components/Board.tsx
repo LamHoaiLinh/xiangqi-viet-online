@@ -107,10 +107,22 @@ export default function Board({ room, game, role, socket, theme }: { room: any; 
 
   const boardAsset = theme.boardAsset || 'board_classic_ivory.png';
   const sceneAsset = theme.sceneAsset || 'scene_blank.png';
+  const boardVisualAdjustments: Record<string, { sizeY: string; posY?: string }> = {
+    'board_wood_brown.png': { sizeY: '98.3%', posY: '50%' }
+  };
+  const boardVisual = boardVisualAdjustments[boardAsset] || { sizeY: '100%', posY: '50%' };
 
   return <div className="board-shell scenic-shell" style={{ ...style, backgroundImage: `url(${ASSET}/scenes/${sceneAsset})` }}>
     <div className="board-inner scenic-inner">
-      <div className={`board board-${viewerColor}`} style={{ backgroundImage: `url(${ASSET}/boards/${boardAsset})` }}>
+      <div
+        className={`board board-${viewerColor}`}
+        data-board-asset={boardAsset}
+        style={{
+          backgroundImage: `url(${ASSET}/boards/${boardAsset})`,
+          backgroundSize: `100% ${boardVisual.sizeY}`,
+          backgroundPosition: `center ${boardVisual.posY || '50%'}`
+        }}
+      >
         <div className="board-surface" />
         <div className="grid-lines">{horizontalLines}{verticalLines}</div>
         <div className="river-gap" />
