@@ -25,10 +25,11 @@ export default function Piece({ piece, style, theme, game }: { piece: PieceModel
     const src = `${ASSET}/pieces/${pieceSet}/piece_${piece.color}_${piece.type}.png`;
     return <span
       className={`${cls} piece-asset-only`}
+      data-piece-set={pieceSet}
       title={`${pieceNameVi[piece.type]}${swapTitle}`}
       style={{ color: piece.color === 'red' ? theme.redPieceColor : theme.blackPieceColor }}
     >
-      <img className="piece-img" src={src} alt={pieceNameVi[piece.type]} draggable={false} onError={e => {
+      <img className="piece-img" data-piece-set={pieceSet} src={src} alt={pieceNameVi[piece.type]} draggable={false} onError={e => {
         const img = e.currentTarget as HTMLImageElement;
         const fallback = `${ASSET}/pieces/classic/piece_${piece.color}_${piece.type}.png`;
         if (!img.dataset.fallbackTried && img.src.indexOf('/pieces/classic/') < 0) {

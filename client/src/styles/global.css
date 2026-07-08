@@ -749,3 +749,34 @@ label { display: grid; gap: 6px; font-weight: 700; }
   outline: 3px solid #2e9d63;
   outline-offset: 2px;
 }
+
+
+/* Piece-set size normalization for newly added assets */
+.piece-set-preview img[data-piece-set="stone"] {
+  transform: scale(1.12);
+  filter: none !important;
+}
+.piece-set-preview img[data-piece-set="ivory"],
+.piece-set-preview img[data-piece-set="crystal"] {
+  transform: scale(1.22);
+  filter: none !important;
+}
+.piece-asset-only[data-piece-set="stone"] .piece-img {
+  transform: scale(1.10);
+  transform-origin: center center;
+  filter: saturate(1.05) contrast(1.04) !important;
+}
+.piece-asset-only[data-piece-set="ivory"] .piece-img,
+.piece-asset-only[data-piece-set="crystal"] .piece-img {
+  transform: scale(1.20);
+  transform-origin: center center;
+  filter: saturate(1.05) contrast(1.04) !important;
+}
+.piece-set-preview img[data-piece-set="stone"],
+.piece-set-preview img[data-piece-set="ivory"],
+.piece-set-preview img[data-piece-set="crystal"],
+.piece-asset-only[data-piece-set="stone"] .piece-img,
+.piece-asset-only[data-piece-set="ivory"] .piece-img,
+.piece-asset-only[data-piece-set="crystal"] .piece-img {
+  box-shadow: none !important;
+}

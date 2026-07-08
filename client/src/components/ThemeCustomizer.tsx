@@ -35,9 +35,9 @@ export default function ThemeCustomizer({ theme, onChange }: { theme: any; onCha
           className={`piece-set-card secondary ${active ? 'active' : ''}`}
           onClick={() => onChange({ ...current, pieceStyle: 'asset', pieceSet: p.id })}
         >
-          <span className="piece-set-preview">
-            <img src={`/assets/pieces/${p.id}/piece_black_rook.png`} alt="Xe đen" draggable={false}/>
-            <img src={`/assets/pieces/${p.id}/piece_red_general.png`} alt="Tướng đỏ" draggable={false}/>
+          <span className="piece-set-preview" data-piece-set={p.id}>
+            <img data-piece-set={p.id} src={`/assets/pieces/${p.id}/piece_black_rook.png`} alt="Xe đen" draggable={false}/>
+            <img data-piece-set={p.id} src={`/assets/pieces/${p.id}/piece_red_general.png`} alt="Tướng đỏ" draggable={false}/>
           </span>
           <strong>{p.name}</strong>
           <small>{active ? 'Đang chọn' : p.hint}</small>
